@@ -26,20 +26,24 @@ export function ProductCard({
 }: ProductCardProps) {
   const cardContent = (
     <Card className="h-full flex flex-col items-center p-4 cursor-pointer hover:shadow-lg transition-shadow">
-      <div className="w-full h-48 relative mb-4 flex items-center justify-center">
-        <CldImage
-          src={product.imageName}
-          width={500}
-          height={500}
-          alt={product.name}
-          className="object-contain rounded"
-        />
+      <div className="w-full h-48 flex items-center justify-center mb-4 bg-gray-50 rounded-md">
+        <div className="relative w-36 h-36 flex items-center justify-center">
+          <CldImage
+            src={product.imageName}
+            width={200}
+            height={200}
+            alt={product.name}
+            className="object-contain rounded max-h-full max-w-full"
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
       </div>
       <CardContent className="flex flex-col items-center">
-        <h2 className="text-lg font-semibold mb-2">{product.name}</h2>
+        <h2 className="text-lg font-semibold mb-2 line-clamp-1">{product.name}</h2>
         <p className="text-blue-600 font-bold text-xl">
           ${product.salePrice.toFixed(2)}
         </p>
+        <p className="text-gray-600 text-sm">{product.stock} en stock</p>
       </CardContent>
     </Card>
   );
