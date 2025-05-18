@@ -19,6 +19,11 @@ model User {
   email    String  @unique
   password String
   posts    Post[]
+
+  sales        Sale[]
+  purchases    Purchase[]
+  adjustments  InventoryAdjustment[]
+  shifts       Shift[]
 }
 
 model Post {
@@ -41,4 +46,140 @@ model Product {
   stock          Int
   isActive       Boolean  @default(true)
   notes          String?
+
+  salesItems       SaleItem[]
+  purchaseItems    PurchaseItem[]
+  warehouseStocks  WarehouseStock[]
+  adjustments      InventoryAdjustment[]
+  movements        InventoryMovement[]
+}
+
+model StockLocation {
+  id    String @id @default(uuid())
+  name  String @unique  // Ej: "Almacén Central", "Sucursal A"
+
+  stock       WarehouseStock[]
+  sales       SaleItem[]
+  purchases   PurchaseItem[]
+  adjustments InventoryAdjustment[]
+  movements   InventoryMovement[]
+}
+
+model WarehouseStock {
+  id         String @id @default(uuid())
+  productId  Int
+  locationId String
+  quantity   Int
+
+  product   Product       @relation(fields: [productId], references: [id])
+  location  StockLocation @relation(fields: [locationId], references: [id])
+
+  @@unique([productId, locationId]) // Un producto no puede repetirse en la misma ubicación
+}
+
+model Sale {
+  id        String   @id @default(uuid())
+  userId    String   // Usuario que realizó la venta
+  shiftId   String   // Turno en que se hizo
+  paymentMethodId String     // Método de pago usado
+  total     Float
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  shift  Shift  @relation(fields: [shiftId], references: [id])
+  items  SaleItem[]
+  paymentMethod  PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+}
+
+model SaleItem {
+  id         String @id @default(uuid())
+  saleId     String
+  productId  Int
+  locationId String // Ubicación desde donde se vendió
+  quantity   Int
+  unitPrice  Float  // Precio por unidad en ese momento
+  total      Float  // quantity * unitPrice
+
+  sale     Sale          @relation(fields: [saleId], references: [id])
+  product  Product       @relation(fields: [productId], references: [id])
+  location StockLocation @relation(fields: [locationId], references: [id])
+}
+
+model Purchase {
+  id        String   @id @default(uuid())
+  userId    String   // Usuario que registró la compra
+  total     Float
+  createdAt DateTime @default(now())
+
+  user   User          @relation(fields: [userId], references: [id])
+  items  PurchaseItem[]
+}
+
+model PurchaseItem {
+  id          String @id @default(uuid())
+  purchaseId  String
+  productId   Int
+  locationId  String // Ubicación a donde entra el producto
+  quantity    Int
+  unitCost    Float  // Costo por unidad en esa compra
+  totalCost   Float  // quantity * unitCost
+
+  purchase Purchase       @relation(fields: [purchaseId], references: [id])
+  product  Product        @relation(fields: [productId], references: [id])
+  location StockLocation  @relation(fields: [locationId], references: [id])
+}
+
+model InventoryAdjustment {
+  id          String @id @default(uuid())
+  productId   Int
+  quantity    Int
+  reason      String
+  userId      String
+  locationId  String
+  createdAt   DateTime @default(now())
+
+  product  Product        @relation(fields: [productId], references: [id])
+  user     User           @relation(fields: [userId], references: [id])
+  location StockLocation  @relation(fields: [locationId], references: [id])
+}
+
+model PaymentMethod {
+  id    String   @id @default(uuid()) // Identificador único
+  name  String   @unique // Nombre del método de pago (Ej: Efectivo, Transferencia)
+
+  // Relaciones
+  sales Sale[]
+}
+
+model InventoryMovement {
+  id           String        @id @default(uuid())
+  productId    Int
+  locationId   String
+  quantity     Int
+  movementType MovementType // ENUM: SALE, PURCHASE, ADJUSTMENT, TRANSFER
+  reference    String?       // Opcional: ID de venta/compra relacionada
+  createdAt    DateTime      @default(now())
+
+  product  Product        @relation(fields: [productId], references: [id])
+  location StockLocation  @relation(fields: [locationId], references: [id])
+}
+
+model Shift {
+  id          String   @id @default(uuid())
+  userId      String
+  startTime   DateTime
+  endTime     DateTime?
+  startAmount Float     // Cantidad de efectivo o inventario al iniciar
+  endAmount   Float?    // Cantidad al terminar
+  createdAt   DateTime  @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  sales Sale[]
+}
+
+enum MovementType {
+  SALE
+  PURCHASE
+  ADJUSTMENT
+  TRANSFER
 }
