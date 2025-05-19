@@ -19,6 +19,7 @@ model User {
   email    String  @unique
   password String
   posts    Post[]
+  role     String @default("admin")
 
   sales        Sale[]
   purchases    Purchase[]
