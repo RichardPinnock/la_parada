@@ -59,3 +59,65 @@ export async function GET(request: Request) {
         },
     });
 }
+
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+        const { 
+            userId, 
+            paymentMethodId, 
+            items,
+            total,
+            shiftId,
+        }: {
+            shiftId: string
+            userId: string
+            paymentMethodId: string
+            items: { productId: string; quantity: number; unitPrice: number }[]
+            total: number
+        } = body
+
+        if (!items || items.length === 0) {
+            return NextResponse.json({ error: 'No se proporcionaron items' }, { status: 400 })
+        }
+        if (!userId || !paymentMethodId || !total || !shiftId) {
+            return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
+        }
+        const shift = await prisma.shift.findUnique({
+            where: { id: shiftId },
+            include: {
+                stockLocation: true,
+            },
+        });
+        if (!shift) {
+            return NextResponse.json({ error: 'Turno no encontrado' }, { status: 404 })
+        }
+        
+        // const totalAmount = items.reduce((sum, item) => {
+        //   return sum + item.quantity * item.unitPrice
+        // }, 0)
+
+        const sale = await prisma.sale.create({
+            data: {
+                userId,
+                paymentMethodId,
+                total,
+                shiftId,
+                items: {
+                    create: items.map((item: any) => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        locationId: shift.stockLocationId,
+                        unitPrice: item.unitPrice,
+                        total: item.quantity * item.unitPrice,
+                    })),
+                },
+            },
+        });
+
+        return NextResponse.json(sale);
+    } catch (error) {
+        console.log("error al crear la venta", error);
+        return NextResponse.json({ error: "Error al crear la venta" }, { status: 500 });
+    }
+}
