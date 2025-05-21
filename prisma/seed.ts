@@ -52,16 +52,45 @@ async function seedInitialStock(locationId: string) {
   }
 }
 
-async function seedInitialShift(userId: string) {
+async function seedInitialShift(userId: string, locationId: string) {
   const shift = await prisma.shift.create({
     data: {
       userId,
       startTime: new Date(),
       startAmount: 0,
+      stockLocationId: locationId,
     },
   });
 
   console.log(`Turno creado: ${shift.id}`);
+}
+
+async function userStockLocation(userId: string, locationId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  const stockLocation = await prisma.stockLocation.findUnique({
+    where: { id: locationId },
+  });
+
+  if (!stockLocation) {
+    throw new Error('Ubicación no encontrada');
+  }
+
+  await prisma.userStockLocation.create({
+    data: {
+      userId,
+      stockLocationId: locationId,
+    },
+  });
+
+  console.log(`Ubicación asignada al usuario: ${user.name} en ${stockLocation.name}`);
+  
 }
 
 async function main() {
@@ -118,7 +147,8 @@ async function main() {
   const location = await seedStockLocation();
   await seedInitialStock(location.id);
   
-  await seedInitialShift(userAdmin.id);
+  await seedInitialShift(userAdmin.id, location.id);
+  await userStockLocation(userAdmin.id, location.id);
 
   // const userIdMapping = {
   //   alice: users[0].id,

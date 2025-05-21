@@ -166,3 +166,23 @@ Once the server is running, visit `http://localhost:3000` to start using the app
 - [Prisma Client API reference](https://www.prisma.io/docs/orm/prisma-client)
 - [Join our Discord community](https://discord.com/invite/prisma)
 - [Follow us on Twitter](https://twitter.com/prisma)
+
+
+## Nota para el negocio
+
+**Flujo visual simplificado para registrar una venta:**
+
+1. **Usuario inicia sesión:** Ya sabe en qué ubicación trabaja.
+2. **Usuario inicia turno:** Guarda la hora, ubicación y efectivo inicial.
+3. **Usuario registra venta:**
+    - Selecciona productos y cantidades.
+    - Selecciona método de pago.
+4. **El sistema:**
+    - Descuenta el stock de la ubicación.
+    - Registra los datos en Sale y SaleItems.
+    - Suma la venta al turno activo.
+5. **Usuario registra una compra**
+    -Selecciona productos y cantidades
+6. **El sistema**
+    - Aumenta los productos en el stock
+    - Registra la compra en un turno si es need

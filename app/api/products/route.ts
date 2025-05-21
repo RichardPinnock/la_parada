@@ -19,3 +19,34 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ products, totalPages });
 }
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { 
+      name,
+      purchasePrice,
+      salePrice,
+      imageName,
+      stock,
+      isActive,
+      notes,
+      
+      
+    } = body;
+    const product = await prisma.product.create({
+      data: { 
+        name,
+        purchasePrice,
+        salePrice,
+        imageName,
+        stock,
+        isActive,
+        notes,
+      },
+    });
+    return NextResponse.json(product, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
