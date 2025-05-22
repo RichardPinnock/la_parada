@@ -55,6 +55,7 @@ model Product {
   warehouseStocks WarehouseStock[]
   adjustments     InventoryAdjustment[]
   movements       InventoryMovement[]
+  snapshots       ShiftStockSnapshot[]
 }
 
 model StockLocation {
@@ -68,6 +69,7 @@ model StockLocation {
   movements   InventoryMovement[]
   userLinks   UserStockLocation[]
   shifts      Shift[]
+  snapshots   ShiftStockSnapshot[]
 }
 
 model UserStockLocation {
@@ -194,6 +196,21 @@ model Shift {
   user          User          @relation(fields: [userId], references: [id])
   sales         Sale[]
   stockLocation StockLocation @relation(fields: [stockLocationId], references: [id])
+  snapshots ShiftStockSnapshot[]
+}
+
+model ShiftStockSnapshot {
+  id          String @id @default(uuid())
+  shiftId     String
+  productId   Int
+  locationId  String
+  type        String  //START-END
+  quantity    Int
+  createdAt   DateTime @default(now())
+
+  shift       Shift @relation(fields: [shiftId], references: [id])
+  product     Product @relation(fields: [productId], references: [id])
+  location    StockLocation @relation(fields: [locationId], references: [id])
 }
 
 enum MovementType {

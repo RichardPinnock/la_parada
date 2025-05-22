@@ -55,9 +55,12 @@ async function seedInitialStock(locationId: string) {
       console.log(`Stock inicial para producto: ${producto.name}`);
     }
   }
+  const ids_productos = productos.map((producto) => producto.id);
+  console.log(`Productos ids --->>> ${ids_productos.join(', ')}`);
+  return ids_productos;
 }
 
-async function seedInitialShift(userId: string, locationId: string) {
+async function seedInitialShift(userId: string, locationId: string, ids_products: number[]) {
   const shift = await prisma.shift.create({
     data: {
       userId,
@@ -66,6 +69,17 @@ async function seedInitialShift(userId: string, locationId: string) {
       stockLocationId: locationId,
     },
   });
+  for (const productId of ids_products) {
+    await prisma.shiftStockSnapshot.create({
+      data: {
+        shiftId: shift.id,
+        productId,
+        locationId,
+        quantity: 100,
+        type: 'START',
+      },
+    });
+  }
 
   console.log(`Turno creado: id turno ->>> ${shift.id}`);
   console.log(`Usuario id --->>> ${userId}`);
@@ -83,6 +97,8 @@ async function userStockLocation(userId: string, locationId: string) {
   const stockLocation = await prisma.stockLocation.findUnique({
     where: { id: locationId },
   });
+  console.log('stockLocation ===>>>', stockLocation);
+  
 
   if (!stockLocation) {
     throw new Error('Ubicación no encontrada');
@@ -151,9 +167,9 @@ async function main() {
 
   await seedPaymentMethods();
   const location = await seedStockLocation();
-  await seedInitialStock(location.id);
+  const ids_products = await seedInitialStock(location.id);
   
-  await seedInitialShift(userAdmin.id, location.id);
+  await seedInitialShift(userAdmin.id, location.id, ids_products);
   await userStockLocation(userAdmin.id, location.id);
 
   // const userIdMapping = {
