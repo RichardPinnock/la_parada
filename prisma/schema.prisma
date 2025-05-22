@@ -26,6 +26,7 @@ model User {
   adjustments    InventoryAdjustment[]
   shifts         Shift[]
   stockLocations UserStockLocation[]
+  movements      InventoryMovement[]
 }
 
 model Post {
@@ -173,7 +174,9 @@ model InventoryMovement {
   movementType MovementType // ENUM: SALE, PURCHASE, ADJUSTMENT, TRANSFER
   reference    String? // Opcional: ID de venta/compra relacionada
   createdAt    DateTime     @default(now())
+  userId String
 
+  user   User @relation(fields: [userId], references: [id])
   product  Product       @relation(fields: [productId], references: [id])
   location StockLocation @relation(fields: [locationId], references: [id])
 }

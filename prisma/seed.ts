@@ -14,7 +14,10 @@ async function seedPaymentMethods() {
     });
   }
 
+  const paymentMethods = await prisma.paymentMethod.findMany();
+  const paymentMethodIds = paymentMethods.map((method) => method.id);
   console.log(`Métodos de pago insertados: ${methods.join(', ')}`);
+  console.log(`Métodos de pago ids --->>> ${paymentMethodIds.join(', ')}`);
 }
 
 async function seedStockLocation() {
@@ -25,6 +28,8 @@ async function seedStockLocation() {
   });
 
   console.log(`Ubicación creada: ${location.name}`);
+  console.log(`Ubicación id --->>> ${location.id}`);
+  
   return location;
 }
 
@@ -62,7 +67,8 @@ async function seedInitialShift(userId: string, locationId: string) {
     },
   });
 
-  console.log(`Turno creado: ${shift.id}`);
+  console.log(`Turno creado: id turno ->>> ${shift.id}`);
+  console.log(`Usuario id --->>> ${userId}`);
 }
 
 async function userStockLocation(userId: string, locationId: string) {

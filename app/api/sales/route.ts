@@ -1,3 +1,4 @@
+import { registerInventoryMovementFromSale } from "@/lib/inventory-utils";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -114,6 +115,8 @@ export async function POST(request: Request) {
                 },
             },
         });
+
+        await registerInventoryMovementFromSale(sale.id);
 
         return NextResponse.json(sale);
     } catch (error) {

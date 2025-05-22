@@ -9,6 +9,14 @@ export async function GET(request: Request) {
 
   // Obtener productos paginados
   const products = await prisma.product.findMany({
+    include: {
+      warehouseStocks: {
+        include: {
+          location: true,
+        },
+      },
+      
+    },
     skip: offset,
     take: productsPerPage,
     orderBy: { id: "desc" },
