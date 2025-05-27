@@ -2,16 +2,8 @@ import { CldImage } from "next-cloudinary";
 import React from "react";
 import { Card, CardContent } from "./ui/card";
 import Link from "next/link";
+import { Product } from "@/lib/models/products";
 
-export interface Product {
-  id: number;
-  name: string;
-  salePrice: number;
-  imageName: string;
-  stock?: number;
-  isActive?: boolean;
-  notes?: string;
-}
 
 interface ProductCardProps {
   product: Product;
@@ -43,7 +35,28 @@ export function ProductCard({
         <p className="text-blue-600 font-bold text-xl">
           ${product.salePrice.toFixed(2)}
         </p>
-        <p className="text-gray-600 text-sm">{product.stock} en stock</p>
+
+        {/* Agregar validación para mostrar productos de acuerdo al stockLocation del usuario  */}
+        {/* O hacer la validación desde el backend */}
+        {product.isActive === false && (
+          <p className="text-red-500 text-sm mt-1">Producto inactivo</p>
+        )}
+        {product.warehouseStocks.length > 0 && (
+          <>
+            {product.warehouseStocks.slice(0, 3).map((stock) => (
+              <p key={stock.id} className="text-gray-500 text-sm mt-1 text-center">
+                {stock.location.name}: {stock.quantity}
+              </p>
+            ))}
+            {product.warehouseStocks.length > 3 && (
+              <p className="text-gray-400 text-xs mt-1 text-center">
+                Más almacenes...
+              </p>
+            )}
+          </>
+        )}
+        
+        {/* <p className="text-gray-600 text-sm">{product.warehouseStocks[0].quantity} en stock</p> */}
       </CardContent>
     </Card>
   );

@@ -4,17 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CldImage } from "next-cloudinary";
-
-interface Product {
-  id: number;
-  name: string;
-  purchasePrice: number;
-  salePrice: number;
-  imageName: string;
-  stock: number;
-  isActive: boolean;
-  notes?: string;
-}
+import { Product } from "@/lib/models/products";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -78,7 +68,21 @@ export default function ProductDetailPage() {
                 {product.salePrice.toFixed(2)}
               </p>
               <p>
-                <span className="font-semibold">Stock:</span> {product.stock}
+                <span className="font-semibold">Stock por locales:</span>
+                {product.warehouseStocks.length === 0 ? (
+                  <span className="text-gray-400 ml-2">No hay este producto en ningún local.</span>
+                ) : (
+                  <>
+                    {product.warehouseStocks.map((stock) => (
+                      <p
+                        key={stock.id}
+                        className="text-gray-500 text-sm mt-1 text-center"
+                      >
+                        {stock.location.name}: {stock.quantity}
+                      </p>
+                    ))}
+                  </>
+                )}
               </p>
               <p>
                 <span className="font-semibold">Estado:</span>{" "}

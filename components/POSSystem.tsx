@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/sheet";
 
 import Image from "next/image";
-import { Product, ProductCard } from "@/components/productCard";
+import { ProductCard } from "@/components/productCard";
+import { Product } from "@/lib/models/products";
 
 interface ItemCarrito extends Product {
   cantidad: number;
