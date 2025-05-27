@@ -70,15 +70,15 @@ export default function ProductDetailPage() {
               <p>
                 <span className="font-semibold">Stock por locales:</span>
                 {product.warehouseStocks.length === 0 ? (
-                  <span className="text-gray-400 ml-2">No hay este producto en ningún local.</span>
+                  <span className="text-gray-400 ml-2 font-semibold">No hay este producto en ningún local.</span>
                 ) : (
                   <>
                     {product.warehouseStocks.map((stock) => (
                       <p
                         key={stock.id}
-                        className="text-gray-500 text-sm mt-1 text-center"
+                        className="text-sm mt-1 font-semibold ml-1"
                       >
-                        {stock.location.name}: {stock.quantity}
+                        -{stock.location.name}: {stock.quantity}
                       </p>
                     ))}
                   </>
