@@ -7,14 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 import { ProductCard } from "@/components/productCard";
+import { Product } from "@/lib/models/products";
 
 
-interface Product {
-  id: number;
-  name: string;
-  salePrice: number;
-  imageName: string;
-}
 
 export const dynamic = "force-dynamic";
 

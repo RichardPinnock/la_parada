@@ -41,7 +41,9 @@ export function ProductCard({
         {product.isActive === false && (
           <p className="text-red-500 text-sm mt-1">Producto inactivo</p>
         )}
-        {product.warehouseStocks.length > 0 && (
+        {product.warehouseStocks.length === 0 ? (
+          <span className="text-red-400 ml-2 text-xs text-center">No hay este producto en ningún local.</span>
+        ) : (product.warehouseStocks.length > 0 && (
           <>
             {product.warehouseStocks.slice(0, 3).map((stock) => (
               <p key={stock.id} className="text-gray-500 text-sm mt-1 text-center">
@@ -54,7 +56,7 @@ export function ProductCard({
               </p>
             )}
           </>
-        )}
+        ))}
         
         {/* <p className="text-gray-600 text-sm">{product.warehouseStocks[0].quantity} en stock</p> */}
       </CardContent>
