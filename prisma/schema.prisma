@@ -59,8 +59,9 @@ model Product {
 }
 
 model StockLocation {
-  id   String @id @default(uuid())
-  name String @unique // Ej: "Almacén Central", "Sucursal A"
+  id            String @id @default(uuid())
+  name          String @unique // Ej: "Almacén Central", "Sucursal A"
+  isActive      Boolean @default(true)
 
   stock       WarehouseStock[]
   sales       SaleItem[]
