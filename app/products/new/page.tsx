@@ -99,6 +99,7 @@ export default function NewProduct() {
                   placeholder="0.00"
                 />
               </div>
+              {/* 
               <div>
                 <Label htmlFor="stock">Stock</Label>
                 <Input
@@ -108,7 +109,8 @@ export default function NewProduct() {
                   required
                   placeholder="Cantidad en stock"
                 />
-              </div>
+              </div> 
+              */}
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="isActive"

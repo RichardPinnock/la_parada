@@ -10,7 +10,7 @@ export async function createProduct(formData: FormData) {
       purchasePrice: parseFloat(formData.get("purchasePrice") as string),
       salePrice: parseFloat(formData.get("salePrice") as string),
       imageName: formData.get("imageName") as string,
-      stock: parseInt(formData.get("stock") as string, 10),
+      stock: 0,
       isActive: formData.get("isActive") === "on",
       notes: formData.get("notes") as string,
     },
