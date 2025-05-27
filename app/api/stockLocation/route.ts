@@ -18,6 +18,9 @@ export async function GET(request: Request) {
                         contains: searchParams.get("search") || "",
                         mode: "insensitive",
                     },
+                },
+                orderBy: {
+                    name: "asc",
                 }
             }),
             prisma.stockLocation.count(),

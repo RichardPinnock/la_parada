@@ -1,8 +1,12 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Edit } from "lucide-react";
+
+import ModalStockLocation from "@/components/modals/modal-stock-location";
 
 interface StockLocation {
+  id: string;
   name: string;
   isActive: boolean;
 }
@@ -16,6 +20,30 @@ const Page = () => {
   const [data, setData] = useState<StockLocation[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [showModal, setShowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<StockLocation>({
+    id: "",
+    name: "",
+    isActive: true,
+  });
+
+  const handleOpen = (data?: any) => {
+
+    if (data) {
+      setSelectedItem({ id: data.id, name: data.name, isActive: data.isActive });
+    } else {
+      setSelectedItem({ id: "", name: "", isActive: true });
+    }
+    setShowModal(true);
+  };
+  const handleClose = () => setShowModal(false);
+
+  const handleSubmit = (data: { name: string; isActive: boolean }) => {
+    // Aquí puedes hacer lo que quieras con los datos (ej: enviar a la API)
+    console.log("Datos enviados:", data);
+    setShowModal(false);
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -52,6 +80,19 @@ const Page = () => {
         </div>
       ) : (
         <>
+          <div className="flex justify-between items-center p-8">
+            <h1 className="text-2xl font-bold mb-4">Locales</h1>
+            <button
+              onClick={handleOpen}
+              className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition-colors font-semibold"
+            >
+              Registrar local
+            </button>
+          </div>
+          {showModal && (
+            <ModalStockLocation initialData={selectedItem} onClose={handleClose} onSubmit={handleSubmit} />
+          )}
+
           {data.length === 0 ? (
             <div className="min-h-screen flex items-center justify-center">
               <p className="text-gray-600 text-center font-bold text-3xl">
@@ -60,7 +101,6 @@ const Page = () => {
             </div>
           ) : (
             <div className="p-8">
-              <h1 className="text-2xl font-bold mb-4">Locales</h1>
               <div className="mb-2 p-2 bg-gray-50 rounded-md">
                 <div className="max-h-46 overflow-x-auto">
                   <table className="min-w-full divide-y-2 divide-gray-200">
@@ -68,6 +108,7 @@ const Page = () => {
                       <tr className="*:font-medium *:text-gray-900">
                         <th className="px-3 py-2 whitespace-nowrap">Nombre</th>
                         <th className="px-3 py-2 whitespace-nowrap">Estado</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Editar</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -85,6 +126,14 @@ const Page = () => {
                               checked={item.isActive}
                               onChange={handleCheck(idx)}
                             />
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-center">
+                            <button
+                              onClick={() => handleOpen(item)}
+                              className="px-2 py-1 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       ))}
