@@ -186,3 +186,30 @@ Once the server is running, visit `http://localhost:3000` to start using the app
 6. **El sistema**
     - Aumenta los productos en el stock
     - Registra la compra en un turno si es need
+
+
+
+<!-- 
+**Por hacer
+--Se need el usuario logueado IMPORTANTE!!!!!!!!!!!!!!!
+
+-Frontend de compras unirlo con el backend (Purchase)
+
+-Frontend de crear turno unir con backend
+se puede crear varios turnos a la vez?? O varios en un mismo dia??
+Se confirma la creación de un turno con un snapshot de stock o es  automático o se calcula automático y se confirma luego??
+
+-Frontend de transferir productos entre locales (transfer-location)
+
+-Frontend de ajustes en los turnos (adjustment)
+
+-Frontend de los métodos de pago (paymentMethod) ---opcional
+
+-Empalmar las ventas con el backend
+
+------------------------------------------
+------------------------------------------
+------------------------------------------
+Luego q este todo eso se need hacer los ipv
+
+-->

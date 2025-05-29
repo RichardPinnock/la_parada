@@ -2,7 +2,28 @@
     "cSpell.words": [
         "cloudinary",
         "cuid",
+        "logueado",
         "sonner",
         "uuid"
-    ]
+    ],
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#35355b",
+        "activityBar.background": "#35355b",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBarBadge.background": "#a15e5e",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "statusBar.background": "#22223b",
+        "statusBar.foreground": "#e7e7e7",
+        "titleBar.activeBackground": "#22223b",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#22223b99",
+        "titleBar.inactiveForeground": "#e7e7e799",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#35355b",
+        "statusBarItem.hoverBackground": "#35355b",
+        "statusBarItem.remoteBackground": "#22223b",
+        "statusBarItem.remoteForeground": "#e7e7e7"
+    },
+    "peacock.color": "#22223b"
 }
