@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, ShoppingCart, Plus, Minus, X, CreditCard } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,18 +22,24 @@ import {
 import Image from "next/image";
 import { ProductCard } from "@/components/productCard";
 import { Product } from "@/lib/models/products";
+import { toast } from "sonner";
 
 interface ItemCarrito extends Product {
   cantidad: number;
 }
 
 export default function POSSystem() {
+  const { data: session } = useSession();
+  // console.log("Session data:", session);
+  
+  const username = session?.user?.name || "Invitado";
+  const userId = session?.user?.id || "";
   // Estados
-  const [productos, setProductos] = useState<Product[]>([]);
-  const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [cantidadPagada, setCantidadPagada] = useState<string>("");
-  const [vuelto, setVuelto] = useState<number>(0);
+  const [productos, setProductos] = useState<Product[]>([]); //! PLP
+  const [carrito, setCarrito] = useState<ItemCarrito[]>([]); //! PLP
+  const [busqueda, setBusqueda] = useState(""); //! PLP
+  const [cantidadPagada, setCantidadPagada] = useState<string>(""); //! PLP
+  const [vuelto, setVuelto] = useState<number>(0); //! PLP
   const [sheetOpen, setSheetOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +75,7 @@ export default function POSSystem() {
   // Calcular vuelto cuando cambia la cantidad pagada o el total
   useEffect(() => {
     const pagado = Number.parseFloat(cantidadPagada) || 0;
-    setVuelto(pagado > total ? pagado - total : 0);
+    setVuelto(pagado !== 0 ? pagado - total : 0);
   }, [cantidadPagada, total]);
 
   // Agregar producto al carrito
@@ -111,6 +118,60 @@ export default function POSSystem() {
     setCarrito([]);
     setCantidadPagada("");
     setVuelto(0);
+  };
+
+  const finalizeSale = async () => {
+    console.log("Finalizando venta...");
+    
+    if (carrito.length > 0 && Number.parseFloat(cantidadPagada) >= total && userId) {
+
+      const items = carrito.map((item) => ({
+        productId: item.id,
+        quantity: item.cantidad,
+        unitPrice: item.salePrice,
+      }));
+
+      const saleData = {
+        userId,
+        // paymentMethodId: "1",  //* por defecto efectivo pero se puede cambiar
+        items,
+        total,
+        // shiftId: "1", //* Se registra el turno actual del dia de hoy
+      };
+      console.log('enviando datos de la venta:', saleData);
+      
+
+      await fetch("/api/sales", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(saleData),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) {
+            toast.error("Error al registrar la venta: " + data.error);
+            console.log("Error al crear la venta:", data.error);
+            setSheetOpen(false);
+          } else {
+            console.log("Venta creada exitosamente:", data);
+            toast.success("Venta registrada exitosamente");
+            limpiarCarrito();
+            setSheetOpen(false);
+          }
+        })
+        .catch((error) => {
+          toast.error("Error al procesar la venta: " + error.message);
+          setSheetOpen(false);
+          console.log("Error al procesar la venta:", error);
+        });
+    } else {
+      // Optionally, notify the user that the sale cannot be processed.
+      toast.error("Debe completar todos los campos para finalizar la venta.");
+      setSheetOpen(false);
+      console.log("No se puede finalizar la venta: carrito vacío o monto insuficiente o usuario no logueado.");
+    }
   };
 
   return (
@@ -260,8 +321,13 @@ export default function POSSystem() {
                         <Separator className="my-2" />
                         <div className="flex justify-between font-bold">
                           <span>Vuelto:</span>
-                          <span>${vuelto.toFixed(2)}</span>
+                          <span className={vuelto < 0 ? "text-red-500" : ""}>${vuelto.toFixed(2)}</span>
                         </div>
+                        {username === "Invitado" && (
+                          <span className="text-red-500 text-xs">
+                            Inicie sesión para registrar la venta
+                          </span>
+                        )}
                       </div>
                     )}
 
@@ -269,12 +335,14 @@ export default function POSSystem() {
                       <Button
                         className="flex-1"
                         onClick={() => {
-                          limpiarCarrito();
-                          setSheetOpen(false);
+                          finalizeSale();
                         }}
                         disabled={
                           carrito.length === 0 ||
-                          Number.parseFloat(cantidadPagada) < total
+                          Number.parseFloat(cantidadPagada) < total ||
+                          Number.parseFloat(cantidadPagada) <= 0 ||
+                          cantidadPagada === "" ||
+                          username === "Invitado"
                         }
                       >
                         <CreditCard className="mr-2 h-4 w-4" />

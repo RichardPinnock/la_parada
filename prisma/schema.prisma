@@ -20,7 +20,8 @@ model User {
   password String
   posts    Post[]
   role     String  @default("admin")
-
+  isActive Boolean @default(true)
+  
   sales          Sale[]
   purchases      Purchase[]
   adjustments    InventoryAdjustment[]
