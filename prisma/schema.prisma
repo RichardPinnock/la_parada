@@ -124,7 +124,7 @@ model SaleItem {
 }
 
 model Purchase {
-  id        String   @id @default(uuid())
+  id        Int @id @default(autoincrement())
   userId    String // Usuario que registró la compra
   total     Float
   createdAt DateTime @default(now())
@@ -135,7 +135,7 @@ model Purchase {
 
 model PurchaseItem {
   id         String @id @default(uuid())
-  purchaseId String
+  purchaseId Int
   productId  Int
   locationId String // Ubicación a donde entra el producto
   quantity   Int
