@@ -1,16 +1,44 @@
-import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { authOptions } from "@/auth";
+import prisma from "@/lib/prisma";
 
 export async function GET(request: Request) {
+  const session = await getServerSession(authOptions)
+  console.log('session ===>>', session);
+  let user = null;
+  if(session?.user?.id) {
+    user = await prisma.user.findUnique({
+      where: {
+        id: session.user.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        stockLocations: {
+          select: {
+            stockLocation: true,
+          },
+        },
+      },
+    });
+  }
+  
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
   const productsPerPage = 5;
   const offset = (page - 1) * productsPerPage;
 
+  const where = !session?.user?.id || user?.role == 'admin' ? {} 
+    : { locationId: { in: user?.stockLocations.map((location) => location.stockLocation.id) } }
+
   // Obtener productos paginados
   const products = await prisma.product.findMany({
     include: {
       warehouseStocks: {
+        where: where ,
         include: {
           location: true,
         },
