@@ -81,7 +81,11 @@ export default function POSSystem() {
   // Agregar producto al carrito
   const agregarAlCarrito = (producto: Product) => {
     setCarrito((prevCarrito) => {
-      const itemExistente = prevCarrito.find((item) => item.id === producto.id);
+      const itemExistente = prevCarrito.find((item) => {
+        if (item.id === producto.id && item.warehouseStocks[0].quantity >= item.cantidad) {
+          return true;
+        }
+      });
 
       if (itemExistente) {
         return prevCarrito.map((item) =>
@@ -90,6 +94,11 @@ export default function POSSystem() {
             : item
         );
       } else {
+        // Verificar si hay stock disponible
+        if (producto.warehouseStocks.length < 1 || producto.warehouseStocks[0].quantity <= 0) {
+          toast.error(`No hay stock disponible para ${producto.name}`);
+          return prevCarrito;
+        }
         return [...prevCarrito, { ...producto, cantidad: 1 }];
       }
     });
