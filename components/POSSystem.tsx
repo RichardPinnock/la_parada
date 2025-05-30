@@ -45,21 +45,22 @@ export default function POSSystem() {
 
   // Obtener productos desde la API
   useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/products?page=1");
-        if (!res.ok) throw new Error("Error al obtener productos");
-        const data = await res.json();
-        setProductos(data.products);
-      } catch (error) {
-        setProductos([]);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/products?page=1");
+      if (!res.ok) throw new Error("Error al obtener productos");
+      const data = await res.json();
+      setProductos(data.products);
+    } catch (error) {
+      setProductos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filtrar productos según la búsqueda
   const productosFiltrados = productos.filter((producto) =>
@@ -168,6 +169,7 @@ export default function POSSystem() {
             toast.success("Venta registrada exitosamente");
             limpiarCarrito();
             setSheetOpen(false);
+            fetchProducts();
           }
         })
         .catch((error) => {
