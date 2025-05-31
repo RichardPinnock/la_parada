@@ -1,5 +1,7 @@
 import { registerInventoryMovementForTransfer } from "@/lib/inventory-utils"
 import { NextResponse } from "next/server"
+import prisma from "@/lib/prisma";
+
 
 export async function POST(req: Request) {
   try {
@@ -25,6 +27,26 @@ export async function POST(req: Request) {
     }
 
     // Aquí puedes agregar una validación opcional de stock antes de transferir
+    const fromLocationStock = await prisma.product.findFirst({
+      where: {
+        id: productId,
+      },
+      select: {
+        id: true,
+        warehouseStocks: {
+          where: {
+            locationId: fromLocationId,
+          },
+        },
+      }
+    })
+    if(!fromLocationStock || fromLocationStock.warehouseStocks.length === 0) {
+      return NextResponse.json({ error: 'Producto no encontrado en la ubicación de origen' }, { status: 400 })
+    }
+    const fromLocationQuantity = fromLocationStock.warehouseStocks[0].quantity
+    if (fromLocationQuantity < quantity) {
+      return NextResponse.json({ error: 'Stock insuficiente en la ubicación de origen' }, { status: 400 })
+    }
 
     const transferId = await registerInventoryMovementForTransfer({
       productId,
