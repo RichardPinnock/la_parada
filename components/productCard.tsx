@@ -1,9 +1,12 @@
 import { CldImage } from "next-cloudinary";
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import Link from "next/link";
 import { Product } from "@/lib/models/products";
-
+import { useAllStockLocations } from "@/hooks/useStockLocations";
+import { Button } from "./ui/button";
+import { ArrowRightLeft } from "lucide-react";
+import { TransferStockModal } from "./TransferStockModal";
 
 interface ProductCardProps {
   product: Product;
@@ -14,8 +17,11 @@ interface ProductCardProps {
 export function ProductCard({
   product,
   onSelect,
-  mode = "pos",
+  mode = "management",
 }: ProductCardProps) {
+  const { stockLocations, loading, error } = useAllStockLocations();
+  const [showTransferModal, setShowTransferModal] = useState(false);
+
   const cardContent = (
     <Card className="h-full flex flex-col items-center p-4 cursor-pointer hover:shadow-lg transition-shadow">
       <div className="w-full h-48 flex items-center justify-center mb-4 bg-gray-50 rounded-md">
@@ -31,7 +37,9 @@ export function ProductCard({
         </div>
       </div>
       <CardContent className="flex flex-col items-center">
-        <h2 className="text-lg font-semibold mb-2 line-clamp-1">{product.name}</h2>
+        <h2 className="text-lg font-semibold mb-2 line-clamp-1">
+          {product.name}
+        </h2>
         <p className="text-blue-600 font-bold text-xl">
           ${product.salePrice.toFixed(2)}
         </p>
@@ -42,32 +50,65 @@ export function ProductCard({
           <p className="text-red-500 text-sm mt-1">Producto inactivo</p>
         )}
         {product.warehouseStocks.length === 0 ? (
-          <span className="text-red-400 ml-2 text-xs text-center">No hay este producto en ningún local.</span>
-        ) : (product.warehouseStocks.length > 0 && (
-          <>
-            {product.warehouseStocks.slice(0, 3).map((stock) => (
-              <p key={stock.id} className="text-gray-500 text-sm mt-1 text-center">
-                {stock.location.name}: {stock.quantity}
-              </p>
-            ))}
-            {product.warehouseStocks.length > 3 && (
-              <p className="text-gray-400 text-xs mt-1 text-center">
-                Más almacenes...
-              </p>
-            )}
-          </>
-        ))}
-        
+          <span className="text-red-400 ml-2 text-xs text-center">
+            No hay este producto en ningún local.
+          </span>
+        ) : (
+          product.warehouseStocks.length > 0 && (
+            <>
+              {product.warehouseStocks.slice(0, 3).map((stock) => (
+                <p
+                  key={stock.id}
+                  className="text-gray-500 text-sm mt-1 text-center"
+                >
+                  {stock.location.name}: {stock.quantity}
+                </p>
+              ))}
+              {product.warehouseStocks.length > 3 && (
+                <p className="text-gray-400 text-xs mt-1 text-center">
+                  Más almacenes...
+                </p>
+              )}
+            </>
+          )
+        )}
+
+        {/* Botón de transferencia solo en modo management */}
+        {mode === "management" && product.warehouseStocks.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowTransferModal(true);
+            }}
+          >
+            <ArrowRightLeft className="w-4 h-4 mr-1" />
+            Transferir
+          </Button>
+        )}
+
         {/* <p className="text-gray-600 text-sm">{product.warehouseStocks[0].quantity} en stock</p> */}
       </CardContent>
+
+      <TransferStockModal
+        product={product}
+        stockLocations={stockLocations}
+        open={showTransferModal}
+        onOpenChange={setShowTransferModal}
+      />
     </Card>
   );
 
   if (mode === "management") {
     return (
-      <Link href={`/products/${product.id}`} className="block h-full">
+      <div>
+        {/*    <Link href={`/products/${product.id}`} className="block h-full"></Link>{" "} */}
+
         {cardContent}
-      </Link>
+      </div>
     );
   }
 
