@@ -121,9 +121,21 @@ export async function GET(req: NextRequest) {
       },
       include: {
         product: true,
-        sale: true,
+        sale: {
+          include: {
+            paymentMethod: true, // Incluimos el método de pago para filtrar más adelante
+          }
+        },
       },
     });
+    // de las ventas need sacar el total en efectivo y en trasferencia
+    const totalCashAmount = saleItems
+      .filter((s) => s.sale.paymentMethod.name == "efectivo")
+      .reduce((acc, s) => acc + (s.quantity * s.product.salePrice), 0);
+
+    const totalTransferAmount = saleItems
+      .filter((s) => s.sale.paymentMethod.name == "transferencia")
+      .reduce((acc, s) => acc + (s.quantity * s.product.salePrice), 0);
 
     // Entradas (movimientos tipo PURCHASE hacia ese local)
     const entradas = await prisma.inventoryMovement.findMany({
@@ -170,6 +182,7 @@ export async function GET(req: NextRequest) {
         locationId: stockLocationId,
         type: "START",
         createdAt: { gte: start, lte: end },
+        shiftId: firstShiftToday?.id, // Aseguramos que solo tomamos el snapshot del último turno
       },
     });
 
@@ -198,7 +211,7 @@ export async function GET(req: NextRequest) {
         .filter((s) => s.productId === product.id)
         .reduce((acc, s) => acc + s.quantity, 0);
 
-      const R = (I + E) - V;
+      const R = (I + E) - V - M;
       const T = V * PV;
       const G = T - (V * PC);
 
@@ -220,6 +233,10 @@ export async function GET(req: NextRequest) {
       date: start.toISOString(),
       shiftAuthors: shifts.map((s) => s.user.name),
       products: result,
+      total: {
+        totalCashAmount,
+        totalTransferAmount,
+      }
     });
   } catch (error) {
     console.log("[IPV_ERROR]", error);
