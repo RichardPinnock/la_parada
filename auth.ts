@@ -47,12 +47,25 @@ export const authOptions = {
   pages: {
     signIn: "/login",
   },
+    // ...existing code...
   callbacks: {
     async jwt({ token, user }) {
-      return { ...token, id: token.id ?? user?.id };
+      if (user) {
+        token.id = user.id;
+        token.role = (user as any).role;
+      }
+      return token;
     },
     async session({ session, token }) {
-      return { ...session, user: { ...session.user, id: token.id } };
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+          role: token.role,
+        },
+      };
     },
   },
+  // ...existing code...
 } satisfies NextAuthOptions;

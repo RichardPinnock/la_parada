@@ -103,7 +103,7 @@ export async function registerInventoryMovementFromSale(saleId: string) {
 
 }
 
-export async function registerInventoryMovementFromPurchase(purchaseId: string) {
+export async function registerInventoryMovementFromPurchase(purchaseId: number) {
   const purchase = await prisma.purchase.findUnique({
     where: { id: purchaseId },
     include: {
@@ -121,7 +121,7 @@ export async function registerInventoryMovementFromPurchase(purchaseId: string) 
       locationId: item.locationId,
       quantity: item.quantity,
       movementType: MovementType.PURCHASE,
-      reference: purchase.id,
+      reference: purchase.id.toString(),
       userId: purchase.userId
     })
   }
