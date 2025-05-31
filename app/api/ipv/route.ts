@@ -33,12 +33,14 @@ export async function GET(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
-    console.log("user ===>>", user);
+    // console.log("user ===>>", user);
     
 
     const { searchParams } = new URL(req.url);
     const stockLocationId = user.stockLocations[0]?.stockLocation.id;
     const dateParam = searchParams.get("date");
+    console.log('dateParam ===>>', dateParam);
+    
 
     if (!stockLocationId) {
       return NextResponse.json(
@@ -47,11 +49,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const date = dateParam ? new Date(dateParam) : new Date();
-    let start = new Date(date);
-    start.setHours(0, 0, 0, 0);
-    let end = new Date(date);
-    end.setHours(23, 59, 59, 999);
+    const date = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
+    
+    // Ajustamos start y end para que sean del día local
+    // let start = new Date(date);
+    // start.setUTCHours(0, 0, 0, 0);
+    // let end = new Date(date);
+    // end.setUTCHours(23, 59, 59, 999);
+    
+    // O alternativamente, más explícito:
+    let start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+    let end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    
 
     // Turnos en ese local ese día
     const shifts = await prisma.shift.findMany({

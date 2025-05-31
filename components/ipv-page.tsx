@@ -39,8 +39,8 @@ interface IPVData {
 }
 
 export default function IPVPage() {
-  const { data: session } = useSession();
-  console.log("🚀 ~ IPVPage ~ data:", session);
+  // const { data: session } = useSession();
+  // console.log("🚀 ~ IPVPage ~ data:", session);
   const [data, setData] = useState<IPVData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(
