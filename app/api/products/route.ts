@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
-  console.log('session ===>>', session);
+  // console.log('session ===>>', session);
   let user = null;
   if(session?.user?.id) {
     user = await prisma.user.findUnique({
@@ -25,6 +25,10 @@ export async function GET(request: Request) {
       },
     });
   }
+  console.log('user ===>>', user);
+  console.log('location ===>>', user?.stockLocations[0].stockLocation.name);
+  console.log('location ===>>', user?.stockLocations[0].stockLocation.id);
+  
   
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
