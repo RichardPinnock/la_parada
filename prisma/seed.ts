@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function seedPaymentMethods() {
-  const methods = ['Efectivo', 'Transferencia'];
+  const methods = ['efectivo', 'transferencia'];
 
   for (const name of methods) {
     await prisma.paymentMethod.upsert({

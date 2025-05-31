@@ -50,8 +50,8 @@ export default function POSSystem() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [metodoPago, setMetodoPago] = useState<string>("efectivo");
-  const [codigoTransferencia, setCodigoTransferencia] = useState<string>("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+  const [transferCode, setTransferCode] = useState<string>("");
 
   useEffect(() => {
     fetchProducts();
@@ -170,9 +170,9 @@ export default function POSSystem() {
         userId,
         items,
         total,
-        paymentMethod: metodoPago,
-        ...(metodoPago === "transferencia" && {
-          codigoTransferencia: codigoTransferencia.trim(),
+        paymentMethod: selectedPaymentMethod,
+        ...(selectedPaymentMethod === "transferencia" && {
+          transferCode: transferCode.trim(),
         }),
       };
       console.log("enviando datos de la venta:", saleData);
@@ -336,7 +336,7 @@ export default function POSSystem() {
                       >
                         Método de pago:
                       </label>
-                      <Select value={metodoPago} onValueChange={setMetodoPago}>
+                      <Select value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccione método de pago" />
                         </SelectTrigger>
@@ -349,8 +349,8 @@ export default function POSSystem() {
                       </Select>
                     </div>
 
-                    {/* Metodo de pago , recoger un input con el codigo si es por tranferencia  */}
-                    {metodoPago === "transferencia" && (
+                    {/* Método de pago , recoger un input con el código si es por transferencia  */}
+                    {selectedPaymentMethod === "transferencia" && (
                       <div className="space-y-2">
                         <label
                           htmlFor="codigo-transferencia"
@@ -361,9 +361,9 @@ export default function POSSystem() {
                         <Input
                           id="codigo-transferencia"
                           type="text"
-                          value={codigoTransferencia}
+                          value={transferCode}
                           onChange={(e) =>
-                            setCodigoTransferencia(e.target.value.toUpperCase())
+                            setTransferCode(e.target.value.toUpperCase())
                           }
                           placeholder="Ej: MM502J9UIP987"
                           className="uppercase"
@@ -430,12 +430,14 @@ export default function POSSystem() {
                           Number.parseFloat(cantidadPagada) < total ||
                           Number.parseFloat(cantidadPagada) <= 0 ||
                           cantidadPagada === "" ||
-                          username === "Invitado"
+                          username === "Invitado" ||
+                          selectedPaymentMethod === "" ||
+                          (selectedPaymentMethod === "transferencia" && transferCode === "")
                         }
-                      >
+                        >
                         <CreditCard className="mr-2 h-4 w-4" />
                         Finalizar Venta
-                      </Button>
+                        </Button>
                       <Button
                         variant="outline"
                         onClick={limpiarCarrito}

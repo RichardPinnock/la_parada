@@ -68,26 +68,28 @@ export async function POST(request: Request) {
             userId, 
             items,
             total,
-            paymentMethodId = 'Efectivo', // Default to 'efectivo' if not provided (no se usa)
+            transferCode, // solo se usa para transferencias, no se usa en efectivo
+            paymentMethodName = 'efectivo', // Default to 'efectivo' if not provided (no se usa)
             shiftId = 'today' // Default to 'today' if not provided (no se usa)
         }: {
             shiftId: string
             userId: string
-            paymentMethodId: string
+            paymentMethodName: string
             items: { productId: number; quantity: number; unitPrice: number }[]
-            total: number
+            total: number,
+            transferCode?: string // Optional, only used for transfers
         } = body
 
         if (!items || items.length === 0) {
             return NextResponse.json({ error: 'No se proporcionaron items' }, { status: 400 })
         }
-        if (!userId || !paymentMethodId || !total || !shiftId) {
+        if (!userId || !paymentMethodName || !total || !shiftId) {
             return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
         }
 
         const shift = await CreateShiftToday(userId);
         const paymentMethod = await prisma.paymentMethod.findUnique({
-            where: { name: 'Efectivo' },
+            where: { name: paymentMethodName },
         })
         if (!paymentMethod) {
             return NextResponse.json({ error: 'Método de pago Efectivo no encontrado' }, { status: 404 })
@@ -106,6 +108,7 @@ export async function POST(request: Request) {
                 paymentMethodId: paymentMethod.id,
                 total,
                 shiftId: shift.id,
+                transferCode,
                 items: {
                     create: items.map((item: { productId: number; quantity: number; unitPrice: number }) => ({
                         productId: item.productId,
