@@ -17,7 +17,7 @@ interface ProductCardProps {
 export function ProductCard({
   product,
   onSelect,
-  mode = "management",
+  mode = "pos",
 }: ProductCardProps) {
   const { stockLocations, loading, error } = useAllStockLocations();
   const [showTransferModal, setShowTransferModal] = useState(false);

@@ -23,6 +23,13 @@ import Image from "next/image";
 import { ProductCard } from "@/components/productCard";
 import { Product } from "@/lib/models/products";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface ItemCarrito extends Product {
   cantidad: number;
@@ -31,7 +38,7 @@ interface ItemCarrito extends Product {
 export default function POSSystem() {
   const { data: session } = useSession();
   // console.log("Session data:", session);
-  
+
   const username = session?.user?.name || "Invitado";
   const userId = session?.user?.id || "";
   // Estados
@@ -43,7 +50,9 @@ export default function POSSystem() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Obtener productos desde la API
+  const [metodoPago, setMetodoPago] = useState<string>("efectivo");
+  const [codigoTransferencia, setCodigoTransferencia] = useState<string>("");
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -83,7 +92,10 @@ export default function POSSystem() {
   const agregarAlCarrito = (producto: Product) => {
     setCarrito((prevCarrito) => {
       const itemExistente = prevCarrito.find((item) => {
-        if (item.id === producto.id && item.warehouseStocks[0].quantity >= item.cantidad) {
+        if (
+          item.id === producto.id &&
+          item.warehouseStocks[0].quantity >= item.cantidad
+        ) {
           return true;
         }
       });
@@ -96,7 +108,10 @@ export default function POSSystem() {
         );
       } else {
         // Verificar si hay stock disponible
-        if (producto.warehouseStocks.length < 1 || producto.warehouseStocks[0].quantity <= 0) {
+        if (
+          producto.warehouseStocks.length < 1 ||
+          producto.warehouseStocks[0].quantity <= 0
+        ) {
           toast.error(`No hay stock disponible para ${producto.name}`);
           return prevCarrito;
         }
@@ -132,9 +147,12 @@ export default function POSSystem() {
 
   const finalizeSale = async () => {
     console.log("Finalizando venta...");
-    
-    if (carrito.length > 0 && Number.parseFloat(cantidadPagada) >= total && userId) {
 
+    if (
+      carrito.length > 0 &&
+      Number.parseFloat(cantidadPagada) >= total &&
+      userId
+    ) {
       const items = carrito.map((item) => ({
         productId: item.id,
         quantity: item.cantidad,
@@ -143,13 +161,14 @@ export default function POSSystem() {
 
       const saleData = {
         userId,
-        // paymentMethodId: "1",  //* por defecto efectivo pero se puede cambiar
         items,
         total,
-        // shiftId: "1", //* Se registra el turno actual del dia de hoy
+        paymentMethod: metodoPago,
+        ...(metodoPago === "transferencia" && {
+          codigoTransferencia: codigoTransferencia.trim(),
+        }),
       };
-      console.log('enviando datos de la venta:', saleData);
-      
+      console.log("enviando datos de la venta:", saleData);
 
       await fetch("/api/sales", {
         method: "POST",
@@ -181,7 +200,9 @@ export default function POSSystem() {
       // Optionally, notify the user that the sale cannot be processed.
       toast.error("Debe completar todos los campos para finalizar la venta.");
       setSheetOpen(false);
-      console.log("No se puede finalizar la venta: carrito vacío o monto insuficiente o usuario no logueado.");
+      console.log(
+        "No se puede finalizar la venta: carrito vacío o monto insuficiente o usuario no logueado."
+      );
     }
   };
 
@@ -191,7 +212,7 @@ export default function POSSystem() {
       <header className="border-b bg-background p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-{/*             <Image
+            {/*             <Image
               src="/5ta_cosmetics.jpg"
               alt="Logo 5ta Cosmetics"
               width={48}
@@ -300,6 +321,53 @@ export default function POSSystem() {
                       <span>${total.toFixed(2)}</span>
                     </div>
 
+                    {/* Método de pago */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="metodo-pago"
+                        className="text-sm font-medium"
+                      >
+                        Método de pago:
+                      </label>
+                      <Select value={metodoPago} onValueChange={setMetodoPago}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccione método de pago" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="efectivo">Efectivo</SelectItem>
+                          <SelectItem value="transferencia">
+                            Transferencia
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Metodo de pago , recoger un input con el codigo si es por tranferencia  */}
+                    {metodoPago === "transferencia" && (
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="codigo-transferencia"
+                          className="text-sm font-medium"
+                        >
+                          Código de transferencia:
+                        </label>
+                        <Input
+                          id="codigo-transferencia"
+                          type="text"
+                          value={codigoTransferencia}
+                          onChange={(e) =>
+                            setCodigoTransferencia(e.target.value.toUpperCase())
+                          }
+                          placeholder="Ej: MM502J9UIP987"
+                          className="uppercase"
+                          maxLength={15}
+                        />
+                        <p className="text-xs text-gray-500">
+                          Formato: MM502J9UIP987
+                        </p>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <label htmlFor="pago" className="text-sm font-medium">
                         Cantidad pagada:
@@ -332,7 +400,9 @@ export default function POSSystem() {
                         <Separator className="my-2" />
                         <div className="flex justify-between font-bold">
                           <span>Vuelto:</span>
-                          <span className={vuelto < 0 ? "text-red-500" : ""}>${vuelto.toFixed(2)}</span>
+                          <span className={vuelto < 0 ? "text-red-500" : ""}>
+                            ${vuelto.toFixed(2)}
+                          </span>
                         </div>
                         {username === "Invitado" && (
                           <span className="text-red-500 text-xs">
@@ -375,7 +445,6 @@ export default function POSSystem() {
         </div>
       </header>
 
-      {/* Contenido principal - Listado de productos */}
       <main className="flex-1 overflow-auto p-4">
         <h2 className="mb-4 text-xl font-semibold">Productos</h2>
         {loading ? (

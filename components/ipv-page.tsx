@@ -239,7 +239,7 @@ export default function IPVPage() {
                   <TableHead className="text-right">P.V.</TableHead>
                   <TableHead className="text-right">Inicial</TableHead>
                   <TableHead className="text-right">Entradas</TableHead>
-                  <TableHead className="text-right">Mermas</TableHead>
+                  <TableHead className="text-right">Salida</TableHead>
                   <TableHead className="text-right">Restante</TableHead>
                   <TableHead className="text-right">Vendidos</TableHead>
                   <TableHead className="text-right">Total</TableHead>
