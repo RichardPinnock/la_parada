@@ -103,7 +103,14 @@ export default function POSSystem() {
       if (itemExistente) {
         return prevCarrito.map((item) =>
           item.id === producto.id
-            ? { ...item, cantidad: item.cantidad + 1 }
+            ? {
+                ...item,
+                cantidad:
+                  item.warehouseStocks[0].quantity > item.cantidad
+                    ? item.cantidad + 1
+                    : (toast.error(`No hay suficiente stock para ${item.name}`),
+                      item.cantidad)
+              }
             : item
         );
       } else {
