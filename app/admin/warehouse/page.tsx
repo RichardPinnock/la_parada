@@ -73,6 +73,7 @@ const Page = () => {
 
   return (
     <>
+    
       {isLoading ? (
         <div className="flex items-center justify-center space-x-2 min-h-[200px]">
           <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>

@@ -183,9 +183,9 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({
-      fecha: start.toISOString(),
-      autores: shifts.map((s) => s.user.name),
-      productos: result,
+      date: start.toISOString(),
+      shiftAuthors: shifts.map((s) => s.user.name),
+      products: result,
     });
   } catch (error) {
     console.log("[IPV_ERROR]", error);
