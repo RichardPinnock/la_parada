@@ -125,6 +125,9 @@ export async function GET(req: NextRequest) {
           gte: firstShiftToday?.createdAt ?? start, 
           lte: latestShiftToday?.endTime ?? end,
         },
+        quantity: {
+          gt: 0, // Aseguramos que solo consideramos entradas positivas
+        }
       },
     });
 
@@ -133,6 +136,22 @@ export async function GET(req: NextRequest) {
       where: {
         locationId: stockLocationId,
         createdAt: { gte: start, lte: end },
+      },
+    });
+
+    // Salidas (movimientos tipo TRANSFER desde ese local a otro local)
+    // Esto se mostraría en Merma 
+    const salidas = await prisma.inventoryMovement.findMany({
+      where: {
+        locationId: stockLocationId,
+        movementType: "TRANSFER",
+        createdAt: { 
+          gte: firstShiftToday?.createdAt ?? start, 
+          lte: latestShiftToday?.endTime ?? end,
+        },
+        quantity: {
+          lt: 0, // Aseguramos que solo consideramos salidas negativas
+        }
       },
     });
 
@@ -156,9 +175,15 @@ export async function GET(req: NextRequest) {
         .filter((m) => m.productId === product.id)
         .reduce((acc, m) => acc + m.quantity, 0);
 
-      const M = ajustes
+      let M = ajustes
         .filter((a) => a.productId === product.id)
         .reduce((acc, a) => acc + a.quantity, 0);
+      
+      const S = salidas
+        .filter((m) => m.productId === product.id)
+        .reduce((acc, m) => acc + (m.quantity * -1), 0);
+      
+      M += S;
 
       const V = saleItems
         .filter((s) => s.productId === product.id)
