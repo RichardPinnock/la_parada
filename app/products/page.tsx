@@ -8,6 +8,8 @@ import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 import { ProductCard } from "@/components/productCard";
 import { Product } from "@/lib/models/products";
+import { useAllStockLocations } from "@/hooks/useStockLocations";
+import { useSession } from "next-auth/react";
 
 
 
@@ -16,13 +18,13 @@ export const dynamic = "force-dynamic";
 function ProductsList() {
   const searchParams = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
+  const { stockLocations, error } = useAllStockLocations();
+  const { data: session } = useSession();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchProducts() {
+  async function fetchProducts() {
       setIsLoading(true);
       try {
         const res = await fetch(`/api/products?page=${page}`);
@@ -36,6 +38,8 @@ function ProductsList() {
         setIsLoading(false);
       }
     }
+
+  useEffect(() => {
     fetchProducts();
   }, [page]);
 
@@ -54,7 +58,10 @@ function ProductsList() {
             <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full container mx-auto">
               {products.map((product) => (
                 <li key={product.id}>
-                  <ProductCard product={product} mode="management" />
+                  <ProductCard product={product} mode="management" 
+                    stockLocations={stockLocations || []}
+                    session={session}
+                  />
                 </li>
               ))}
             </ul>

@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Edit } from "lucide-react";
 
 import ModalStockLocation from "@/components/modals/modal-stock-location";
@@ -8,7 +8,7 @@ import { StockLocation } from "@/hooks/useStockLocations";
 
 export const dynamic = "force-dynamic";
 
-const Page = () => {
+const PageContent = () => {
   const searchParams = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
 
@@ -161,4 +161,10 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default function WarehousePage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <PageContent />
+    </Suspense>
+  );
+}
