@@ -195,23 +195,17 @@ Once the server is running, visit `http://localhost:3000` to start using the app
 
 -Frontend de compras unirlo con el backend (Purchase)
 
--Frontend de crear turno unir con backend
-se crea turno cuando se loguea
-se puede crear varios turnos a la vez?? O varios en un mismo dia??
-Se confirma la creación de un turno con un snapshot de stock o es  automático o se calcula automático y se confirma luego??
-
--Frontend de transferir productos entre locales (transfer-location)
-
 -Frontend de ajustes en los turnos (adjustment)
 dar salida
 
 -Frontend de los métodos de pago (paymentMethod) ---opcional
 
--Empalmar las ventas con el backend
+------------------------------------------------------------------
+! hacer loading al registrar una venta
+! revisar responsive en el carrito a veces no se puede ver bien los productos
 
-------------------------------------------
-------------------------------------------
-------------------------------------------
-Luego q este todo eso se need hacer los ipv
+frontend para asignar location a usuarios
+
+
 
 -->
