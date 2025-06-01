@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
+import { parse } from "path";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
-  const productsPerPage = 5;
+  const productsPerPage = parseInt(url.searchParams.get("limit") || "10");
   const offset = (page - 1) * productsPerPage;
 
   const where =

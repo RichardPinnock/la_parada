@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 
-interface StockLocation {
+export interface StockLocation {
   id: string;
   name: string;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

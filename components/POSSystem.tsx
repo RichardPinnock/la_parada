@@ -30,12 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { useAllStockLocations } from "@/hooks/useStockLocations";
 
 interface ItemCarrito extends Product {
   cantidad: number;
 }
 
 export default function POSSystem() {
+  const { stockLocations, error } = useAllStockLocations();
   const { data: session } = useSession();
   // console.log("Session data:", session);
 
@@ -50,7 +52,8 @@ export default function POSSystem() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<string>("");
   const [transferCode, setTransferCode] = useState<string>("");
   const [sendSale, setSendSale] = useState<boolean>(false);
 
@@ -61,7 +64,7 @@ export default function POSSystem() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/products?page=1");
+      const res = await fetch("/api/products?page=1&limit=100");
       if (!res.ok) throw new Error("Error al obtener productos");
       const data = await res.json();
       setProductos(data.products);
@@ -110,7 +113,7 @@ export default function POSSystem() {
                   item.warehouseStocks[0].quantity > item.cantidad
                     ? item.cantidad + 1
                     : (toast.error(`No hay suficiente stock para ${item.name}`),
-                      item.cantidad)
+                      item.cantidad),
               }
             : item
         );
@@ -341,7 +344,10 @@ export default function POSSystem() {
                       >
                         Método de pago:
                       </label>
-                      <Select value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
+                      <Select
+                        value={selectedPaymentMethod}
+                        onValueChange={setSelectedPaymentMethod}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccione método de pago" />
                         </SelectTrigger>
@@ -437,13 +443,14 @@ export default function POSSystem() {
                           cantidadPagada === "" ||
                           username === "Invitado" ||
                           selectedPaymentMethod === "" ||
-                          (selectedPaymentMethod === "transferencia" && transferCode === "") ||
+                          (selectedPaymentMethod === "transferencia" &&
+                            transferCode === "") ||
                           sendSale
                         }
-                        >
+                      >
                         <CreditCard className="mr-2 h-4 w-4" />
                         Finalizar Venta
-                        </Button>
+                      </Button>
                       <Button
                         variant="outline"
                         onClick={limpiarCarrito}
@@ -478,7 +485,12 @@ export default function POSSystem() {
                       {enCarrito.cantidad}
                     </span>
                   )}
-                  <ProductCard product={product} onSelect={agregarAlCarrito} />
+                  <ProductCard
+                    product={product}
+                    onSelect={agregarAlCarrito}
+                    stockLocations={stockLocations || []}
+                    session={session}
+                  />
                 </div>
               );
             })}
