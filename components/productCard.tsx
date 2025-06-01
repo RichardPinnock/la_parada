@@ -24,6 +24,7 @@ export function ProductCard({
   session,
 }: ProductCardProps) {
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const user = session?.user || null;
 
   const cardContent = (
     <Card className="h-full flex flex-col items-center p-4 cursor-pointer hover:shadow-lg transition-shadow">
@@ -52,7 +53,9 @@ export function ProductCard({
         {product.isActive === false && (
           <p className="text-red-500 text-sm mt-1">Producto inactivo</p>
         )}
-        {product.warehouseStocks.length === 0 ? (
+        { user && (
+          <>
+          {product.warehouseStocks.length === 0 ? (
           <span className="text-red-400 ml-2 text-xs text-center">
             No hay este producto en ningún local.
           </span>
@@ -76,6 +79,9 @@ export function ProductCard({
           )
         )}
 
+          </>
+        )}
+        
         {/* Botón de transferencia solo en modo management */}
         {mode === "management" && product.warehouseStocks.length > 0 && (
           <Button
