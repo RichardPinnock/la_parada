@@ -109,6 +109,7 @@ model Sale {
   shift         Shift         @relation(fields: [shiftId], references: [id])
   items         SaleItem[]
   paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  @@index([createdAt])
 }
 
 model SaleItem {
@@ -124,6 +125,8 @@ model SaleItem {
   product  Product       @relation(fields: [productId], references: [id])
   location StockLocation @relation(fields: [locationId], references: [id])
   costAllocations SaleItemCostAllocation[]
+  @@index([locationId, productId])
+  @@index([saleId])
 }
 
 model Purchase {
@@ -134,6 +137,7 @@ model Purchase {
 
   user  User           @relation(fields: [userId], references: [id])
   items PurchaseItem[]
+  @@index([createdAt])
 }
 
 model PurchaseItem {
@@ -149,6 +153,8 @@ model PurchaseItem {
   product  Product       @relation(fields: [productId], references: [id])
   location StockLocation @relation(fields: [locationId], references: [id])
   costAllocations SaleItemCostAllocation[]
+  @@index([locationId, productId])
+  @@index([purchaseId])
 }
 
 model InventoryAdjustment {
@@ -186,6 +192,8 @@ model InventoryMovement {
   user   User @relation(fields: [userId], references: [id])
   product  Product       @relation(fields: [productId], references: [id])
   location StockLocation @relation(fields: [locationId], references: [id])
+  @@index([locationId, createdAt])
+  @@index([productId, movementType])
 }
 
 model Shift {
@@ -216,6 +224,8 @@ model ShiftStockSnapshot {
   shift       Shift @relation(fields: [shiftId], references: [id])
   product     Product @relation(fields: [productId], references: [id])
   location    StockLocation @relation(fields: [locationId], references: [id])
+  @@index([locationId, type, createdAt])
+  @@index([shiftId])
 }
 
 enum MovementType {
