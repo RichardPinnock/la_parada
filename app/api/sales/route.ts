@@ -87,42 +87,130 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
         }
 
-        const shift = await CreateShiftToday(userId);
-        const paymentMethod = await prisma.paymentMethod.findUnique({
-            where: { name: paymentMethodName },
-        })
-        if (!paymentMethod) {
-            return NextResponse.json({ error: 'Método de pago Efectivo no encontrado' }, { status: 404 })
-        }
-        if (!shift) {
-            return NextResponse.json({ error: 'Turno no encontrado' }, { status: 404 })
-        }
+        // const shift = await CreateShiftToday(userId);
+        // const paymentMethod = await prisma.paymentMethod.findUnique({
+        //     where: { name: paymentMethodName },
+        // })
+        // if (!paymentMethod) {
+        //     return NextResponse.json({ error: 'Método de pago Efectivo no encontrado' }, { status: 404 })
+        // }
+        // if (!shift) {
+        //     return NextResponse.json({ error: 'Turno no encontrado' }, { status: 404 })
+        // }
         
-        // const totalAmount = items.reduce((sum, item) => {
-        //   return sum + item.quantity * item.unitPrice
-        // }, 0)
+        // // const totalAmount = items.reduce((sum, item) => {
+        // //   return sum + item.quantity * item.unitPrice
+        // // }, 0)
 
-        const sale = await prisma.sale.create({
-            data: {
-                userId,
-                paymentMethodId: paymentMethod.id,
-                total,
-                shiftId: shift.id,
-                transferCode,
-                items: {
-                    create: items.map((item: { productId: number; quantity: number; unitPrice: number }) => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        locationId: shift.stockLocationId,
-                        unitPrice: item.unitPrice,
-                        total: item.quantity * item.unitPrice,
-                    })),
-                },
-            },
-        });
+        // const sale = await prisma.sale.create({
+        //     data: {
+        //         userId,
+        //         paymentMethodId: paymentMethod.id,
+        //         total,
+        //         shiftId: shift.id,
+        //         transferCode,
+        //         items: {
+        //             create: items.map((item: { productId: number; quantity: number; unitPrice: number }) => ({
+        //                 productId: item.productId,
+        //                 quantity: item.quantity,
+        //                 locationId: shift.stockLocationId,
+        //                 unitPrice: item.unitPrice,
+        //                 total: item.quantity * item.unitPrice,
+        //             })),
+        //         },
+        //     },
+        //     select: {
+        //         items: true,
+        //         id: true,
+        //         createdAt: true,
+        //         user: {
+        //             select: {
+        //                 id: true,
+        //                 name: true,
+        //             }
+        //         },
+        //         shift: true,
+        //         total: true,
+        //         paymentMethod: {
+        //             select: {
+        //                 id: true,
+        //                 name: true,
+        //             }
+        //         },
+        //         transferCode: true,
 
-        await registerInventoryMovementFromSale(sale.id);
+        //     }
+        // });
 
+        // await registerInventoryMovementFromSale(sale.id);
+        // // Registrar las asignaciones de costo para cada item
+        // await Promise.all(
+        //     sale.items.map(item => registerCostAllocationForSaleItem(item.id))
+        // );
+        // Usar transacción para garantizar atomicidad
+        const sale = await prisma.$transaction(
+            async (tx) => {
+                // 1. Obtener/Crear turno
+                const shift = await CreateShiftToday(userId);
+                if (!shift) throw new Error('No se pudo crear/obtener el turno');
+
+                // 2. Verificar método de pago
+                const paymentMethod = await tx.paymentMethod.findUnique({
+                    where: { name: paymentMethodName },
+                });
+                if (!paymentMethod) throw new Error('Método de pago no encontrado');
+
+                // 3. Crear la venta con sus items
+                const newSale = await tx.sale.create({
+                    data: {
+                        userId,
+                        paymentMethodId: paymentMethod.id,
+                        total,
+                        shiftId: shift.id,
+                        transferCode,
+                        items: {
+                            create: items.map(item => ({
+                                productId: item.productId,
+                                quantity: item.quantity,
+                                locationId: shift.stockLocationId,
+                                unitPrice: item.unitPrice,
+                                total: item.quantity * item.unitPrice,
+                            })),
+                        },
+                    },
+                    include: {
+                        items: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            }
+                        },
+                        shift: true,
+                        paymentMethod: {
+                            select: {
+                                id: true,
+                                name: true,
+                            }
+                        },
+                    }
+                });
+
+                // 4. Registrar movimientos de inventario
+                await registerInventoryMovementFromSale(newSale.id, tx);
+
+                // 5. Registrar asignaciones de costo
+                for (const item of newSale.items) {
+                    await registerCostAllocationForSaleItem(item.id, tx);
+                }
+
+                return newSale;
+            }, {
+                timeout: 10000, // 10 segundos en lugar de 5
+                maxWait: 8000   // tiempo máximo de espera para iniciar la transacción
+            }
+        );
+        
         return NextResponse.json(sale);
     } catch (error) {
         console.log("error al crear la venta", error);
@@ -237,4 +325,74 @@ async function StartSnapshots(stockLocationId:string) {
         console.log("Error al obtener los productos para los snapshots:", error);
         throw new Error("Error al obtener los productos para los snapshots");
     }
+}
+
+async function registerCostAllocationForSaleItem(
+  saleItemId: string,
+  tx: any // Prisma transaction
+) {
+  // 1. Obtener detalles del item vendido
+  const saleItem = await tx.saleItem.findUnique({
+    where: { id: saleItemId },
+    include: {
+      product: true,
+      location: true,
+    },
+  });
+
+  if (!saleItem) throw new Error('SaleItem no encontrado');
+
+  const { productId, quantity, locationId } = saleItem;
+  let remainingQuantity = quantity;
+
+  // 2. Obtener compras disponibles ordenadas por fecha (FIFO)
+  const availablePurchases = await tx.purchaseItem.findMany({
+    where: {
+      productId,
+      locationId,
+      quantity: { gt: 0 }
+    },
+    orderBy: { 
+      purchase: { createdAt: 'asc' }
+    },
+  });
+
+  if (!availablePurchases.length) {
+    throw new Error(`No hay compras disponibles para el producto ${saleItem.product.name}`);
+  }
+
+  // 4. Procesar cada compra hasta cubrir la cantidad vendida
+  for (const purchase of availablePurchases) {
+    if (remainingQuantity <= 0) break;
+
+    const usedInAllocations = await tx.saleItemCostAllocation.aggregate({
+      where: { purchaseItemId: purchase.id },
+      _sum: { quantityUsed: true },
+    });
+
+    const usedQuantity = usedInAllocations._sum.quantityUsed || 0;
+    const availableQuantity = purchase.quantity - usedQuantity;
+
+    if (availableQuantity <= 0) continue;
+
+    const quantityToUse = Math.min(availableQuantity, remainingQuantity);
+
+    // 5. Registrar la asignación de costo usando la transacción
+    await tx.saleItemCostAllocation.create({
+      data: {
+        saleItemId,
+        purchaseItemId: purchase.id,
+        quantityUsed: quantityToUse,
+        unitCost: purchase.unitCost,
+      },
+    });
+
+    remainingQuantity -= quantityToUse;
+  }
+
+  if (remainingQuantity > 0) {
+    throw new Error(
+      `Stock insuficiente para ${saleItem.product.name}. Faltan ${remainingQuantity} unidades`
+    );
+  }
 }

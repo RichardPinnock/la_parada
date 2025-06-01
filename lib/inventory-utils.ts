@@ -60,8 +60,8 @@ export async function registerInventoryMovement({
   }
 }
 
-export async function registerInventoryMovementFromSale(saleId: string) {
-  const sale = await prisma.sale.findUnique({
+export async function registerInventoryMovementFromSale(saleId: string, tx: any) {
+  const sale = await tx.sale.findUnique({
     where: { id: saleId },
     include: {
       items: true,
@@ -69,38 +69,42 @@ export async function registerInventoryMovementFromSale(saleId: string) {
         include: { stockLocation: true }
       }
     }
-  })
+  });
 
   if (!sale || !sale.items.length) {
-    throw new Error('Venta no encontrada o sin productos')
+    throw new Error('Venta no encontrada o sin productos');
   }
 
-  // ? Más controlado pero más lento (aunque no se hace ningun control dentro de la función)
-  for (const item of sale.items) {
-    await registerInventoryMovement({
-      productId: item.productId,
-      locationId: sale.shift.stockLocationId,
-      quantity: -item.quantity,
-      movementType: MovementType.SALE,
-      reference: sale.id,
-      userId: sale.userId
+  await Promise.all(
+    sale.items.map(async (item: any) => {
+      // 1. Crear el movimiento de inventario
+      await tx.inventoryMovement.create({
+        data: {
+          productId: item.productId,
+          quantity: -item.quantity, // Negativo porque es una salida
+          locationId: item.locationId,
+          movementType: 'SALE',
+          reference: sale.id,
+          userId: sale.userId,
+        },
+      });
+
+      // 2. Actualizar el stock en warehouse
+      await tx.warehouseStock.update({
+        where: {
+          productId_locationId: {
+            productId: item.productId,
+            locationId: item.locationId,
+          },
+        },
+        data: {
+          quantity: {
+            decrement: item.quantity, // Decrementar la cantidad vendida
+          },
+        },
+      });
     })
-  }
-
-  // ? Mas rápido pero menos controlado
-  // await Promise.all(
-  //   sale.items.map(item =>
-  //     registerInventoryMovement({
-  //       productId: item.productId,
-  //       locationId: sale.shift.stockLocationId,
-  //       quantity: -item.quantity,
-  //       movementType: MovementType.SALE,
-  //       reference: sale.id,
-  //       userId: sale.userId
-  //     })
-  //   )
-  // );
-
+  );
 }
 
 export async function registerInventoryMovementFromPurchase(purchaseId: number) {

@@ -162,14 +162,18 @@ async function main() {
       email: 'rodriadriaguirre@gmail.com',
       name: 'Adrian Aguirre',
       password: await bcrypt.hash('Ar.123456', 10),
+      role: 'admin', // Asignar rol de administrador
+      isActive: true, // Asegurarse de que el usuario esté activo
     },
   })
+  
+
 
   await seedPaymentMethods();
   const location = await seedStockLocation();
-  const ids_products = await seedInitialStock(location.id);
+  // const ids_products = await seedInitialStock(location.id);
   
-  await seedInitialShift(userAdmin.id, location.id, ids_products);
+  // await seedInitialShift(userAdmin.id, location.id, ids_products);
   await userStockLocation(userAdmin.id, location.id);
 
   // const userIdMapping = {

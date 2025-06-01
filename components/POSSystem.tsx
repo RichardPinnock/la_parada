@@ -170,7 +170,7 @@ export default function POSSystem() {
         userId,
         items,
         total,
-        paymentMethod: selectedPaymentMethod,
+        paymentMethodName: selectedPaymentMethod,
         ...(selectedPaymentMethod === "transferencia" && {
           transferCode: transferCode.trim(),
         }),

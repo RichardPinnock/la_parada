@@ -123,6 +123,7 @@ model SaleItem {
   sale     Sale          @relation(fields: [saleId], references: [id])
   product  Product       @relation(fields: [productId], references: [id])
   location StockLocation @relation(fields: [locationId], references: [id])
+  costAllocations SaleItemCostAllocation[]
 }
 
 model Purchase {
@@ -147,6 +148,7 @@ model PurchaseItem {
   purchase Purchase      @relation(fields: [purchaseId], references: [id])
   product  Product       @relation(fields: [productId], references: [id])
   location StockLocation @relation(fields: [locationId], references: [id])
+  costAllocations SaleItemCostAllocation[]
 }
 
 model InventoryAdjustment {
@@ -177,9 +179,9 @@ model InventoryMovement {
   locationId   String
   quantity     Int
   movementType MovementType // ENUM: SALE, PURCHASE, ADJUSTMENT, TRANSFER
-  reference    String? // Opcional: ID de venta/compra relacionada
+  reference    String? // Opcional: ID de venta/compra relacionada/ en caso de transfer tiene el mismo id las dos transfer
+  userId       String
   createdAt    DateTime     @default(now())
-  userId String
 
   user   User @relation(fields: [userId], references: [id])
   product  Product       @relation(fields: [productId], references: [id])
@@ -221,4 +223,15 @@ enum MovementType {
   PURCHASE
   ADJUSTMENT
   TRANSFER
+}
+
+model SaleItemCostAllocation { //este modelo es para saber mejor las ganancias
+  id            String @id @default(uuid())
+  saleItemId    String
+  purchaseItemId String
+  quantityUsed  Int
+  unitCost      Float
+
+  saleItem      SaleItem      @relation(fields: [saleItemId], references: [id])
+  purchaseItem  PurchaseItem  @relation(fields: [purchaseItemId], references: [id])
 }
