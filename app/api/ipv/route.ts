@@ -4,17 +4,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
 
-interface ProfitResult {
-  productId: number;
-  name: string;
-  quantitySold: number;
-  revenue: number; // Ingreso total (ventas)
-  realCost: number; // Costo real FIFO
-  profit: number; // Ganancia real
-  averagePrice: number; // Precio promedio de venta
-  averageCost: number; // Costo promedio real
-}
-
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -70,12 +59,12 @@ export async function GET(req: NextRequest) {
     shifts,
     productsInLocation,
     saleItems,
-    entradas,
-    ajustes,
-    salidas,
+    incomingItems, //entradas
+    stockAdjustments, // ajustes de inventario
+    stockOutflows, // salidas de inventario
     snapshots,
-    ganancias,
-    compras,
+    financialSummary, // ganancias
+    buyingTransactions, //compras
   ] = await Promise.all([
     prisma.shift.findMany({
       where: { stockLocationId, startTime: { gte: start, lte: end } },
@@ -171,18 +160,18 @@ export async function GET(req: NextRequest) {
     const I = snapshots
       .filter((s) => s.productId === product.id)
       .reduce((acc, s) => acc + s.quantity, 0);
-    let E = entradas
+    let E = incomingItems
       .filter((m) => m.productId === product.id)
       .reduce((acc, m) => acc + m.quantity, 0);
-    if (compras.length > 0) {
-      E += compras
+    if (buyingTransactions.length > 0) {
+      E += buyingTransactions
         .filter((c) => c.productId === product.id)
         .reduce((acc, c) => acc + c.quantity, 0);
     }
-    let M = ajustes
+    let M = stockAdjustments
       .filter((a) => a.productId === product.id)
       .reduce((acc, a) => acc + a.quantity, 0);
-    const S = salidas
+    const S = stockOutflows
       .filter((m) => m.productId === product.id)
       .reduce((acc, m) => acc + -m.quantity, 0);
     M += S;
@@ -191,7 +180,7 @@ export async function GET(req: NextRequest) {
       .reduce((acc, s) => acc + s.quantity, 0);
     const R = I + E - V - M;
     const T = V * PV;
-    const G = ganancias.products.find(
+    const G = financialSummary.products.find(
       (g) => g.productId === product.id
     )?.profit ?? 0;
 
