@@ -191,9 +191,6 @@ Once the server is running, visit `http://localhost:3000` to start using the app
 
 <!-- 
 **Por hacer
---Se need el usuario logueado IMPORTANTE!!!!!!!!!!!!!!! useSession();
-
--Frontend de compras unirlo con el backend (Purchase)
 
 -Frontend de ajustes en los turnos (adjustment)
 dar salida
