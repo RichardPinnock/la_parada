@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { Edit } from "lucide-react";
 
 import ModalStockLocation from "@/components/modals/modal-stock-location";
-
-interface StockLocation {
-  id: string;
-  name: string;
-  isActive: boolean;
-}
+import { StockLocation } from "@/hooks/useStockLocations";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +21,27 @@ const Page = () => {
     id: "",
     name: "",
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
 
   const handleOpen = (data?: any) => {
-
     if (data) {
-      setSelectedItem({ id: data.id, name: data.name, isActive: data.isActive });
+      setSelectedItem({
+        id: data.id,
+        name: data.name,
+        isActive: data.isActive,
+        createdAt: data.createdAt || new Date(),
+        updatedAt: data.updatedAt || new Date(),
+      });
     } else {
-      setSelectedItem({ id: "", name: "", isActive: true });
+      setSelectedItem({
+        id: "",
+        name: "",
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
     setShowModal(true);
   };
@@ -73,7 +81,6 @@ const Page = () => {
 
   return (
     <>
-    
       {isLoading ? (
         <div className="flex items-center justify-center space-x-2 min-h-[200px]">
           <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -91,7 +98,11 @@ const Page = () => {
             </button>
           </div>
           {showModal && (
-            <ModalStockLocation initialData={selectedItem} onClose={handleClose} onSubmit={handleSubmit} />
+            <ModalStockLocation
+              initialData={selectedItem}
+              onClose={handleClose}
+              onSubmit={handleSubmit}
+            />
           )}
 
           {data.length === 0 ? (

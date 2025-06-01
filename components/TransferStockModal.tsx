@@ -20,17 +20,15 @@ import { Label } from "./ui/label";
 import { Product } from "@/lib/models/products";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-
-interface StockLocation {
-  id: string;
-  name: string;
-}
+import { StockLocation } from "@prisma/client";
+import { Session } from "next-auth";
 
 interface TransferStockModalProps {
   product: Product;
   stockLocations: StockLocation[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  session: Session | null;
 }
 
 export function TransferStockModal({
@@ -38,8 +36,8 @@ export function TransferStockModal({
   stockLocations,
   open,
   onOpenChange,
+  session,
 }: TransferStockModalProps) {
-  const { data: session } = useSession();
   const [fromLocationId, setFromLocationId] = useState<string>("");
   const [toLocationId, setToLocationId] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);

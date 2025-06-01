@@ -1,25 +1,28 @@
-import { CldImage } from "next-cloudinary";
-import React, { useState } from "react";
-import { Card, CardContent } from "./ui/card";
-import Link from "next/link";
 import { Product } from "@/lib/models/products";
-import { useAllStockLocations } from "@/hooks/useStockLocations";
-import { Button } from "./ui/button";
+import { StockLocation } from "@prisma/client";
 import { ArrowRightLeft } from "lucide-react";
+import { CldImage } from "next-cloudinary";
+import { useState } from "react";
 import { TransferStockModal } from "./TransferStockModal";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Session } from "next-auth";
 
 interface ProductCardProps {
   product: Product;
   onSelect?: (producto: Product) => void;
   mode?: "pos" | "management";
+  stockLocations: StockLocation[];
+  session: Session | null;
 }
 
 export function ProductCard({
   product,
   onSelect,
   mode = "pos",
+  stockLocations,
+  session,
 }: ProductCardProps) {
-  const { stockLocations, loading, error } = useAllStockLocations();
   const [showTransferModal, setShowTransferModal] = useState(false);
 
   const cardContent = (
@@ -98,6 +101,7 @@ export function ProductCard({
         stockLocations={stockLocations}
         open={showTransferModal}
         onOpenChange={setShowTransferModal}
+        session={session}
       />
     </Card>
   );
