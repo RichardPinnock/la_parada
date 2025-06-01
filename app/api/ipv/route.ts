@@ -75,6 +75,7 @@ export async function GET(req: NextRequest) {
     salidas,
     snapshots,
     ganancias,
+    compras,
   ] = await Promise.all([
     prisma.shift.findMany({
       where: { stockLocationId, startTime: { gte: start, lte: end } },
@@ -134,6 +135,26 @@ export async function GET(req: NextRequest) {
       firstShiftToday?.createdAt ?? start,
       latestShiftToday?.endTime ?? end
     ),
+    prisma.purchaseItem.findMany({
+      where: {
+        // Filtra por las ubicaciones incluidas en el array
+        locationId: { in: user?.stockLocations.map((sl) => sl.stockLocation.id) },
+        // Filtra por la fecha de la compra relacionada
+        purchase: {
+          createdAt: {
+            gte: start,
+            lte: end,
+          },
+        },
+      },
+      include: {
+        product: true,
+        purchase: true,
+        location: true,
+        // incluye si necesitas las asignaciones de costos
+        costAllocations: true,
+      },
+    })
   ]);
 
   const totalCashAmount = saleItems
@@ -150,9 +171,14 @@ export async function GET(req: NextRequest) {
     const I = snapshots
       .filter((s) => s.productId === product.id)
       .reduce((acc, s) => acc + s.quantity, 0);
-    const E = entradas
+    let E = entradas
       .filter((m) => m.productId === product.id)
       .reduce((acc, m) => acc + m.quantity, 0);
+    if (compras.length > 0) {
+      E += compras
+        .filter((c) => c.productId === product.id)
+        .reduce((acc, c) => acc + c.quantity, 0);
+    }
     let M = ajustes
       .filter((a) => a.productId === product.id)
       .reduce((acc, a) => acc + a.quantity, 0);
@@ -167,7 +193,7 @@ export async function GET(req: NextRequest) {
     const T = V * PV;
     const G = ganancias.products.find(
       (g) => g.productId === product.id
-    )?.profit;
+    )?.profit ?? 0;
 
     return { nombre: product.name, PC, PV, I, E, M, R, V, T, G };
   });
