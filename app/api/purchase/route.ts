@@ -6,7 +6,20 @@ import { NextResponse } from 'next/server';
 export async function GET() {
     try {
         // Obtiene todas las compras (purchase)
-        const purchases = await prisma.purchase.findMany();
+        const purchases = await prisma.purchase.findMany({
+            include: {
+                user: true, // Incluye los datos del usuario
+                items: {
+                    include: {
+                        product: true, // Incluye los datos del producto
+                        location: true, // Incluye los datos de la ubicación
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc', // Ordena por fecha de creación descendente
+            },
+        });
         return NextResponse.json(purchases, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: 'Error al obtener las compras' }, { status: 500 });
