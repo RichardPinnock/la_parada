@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar, Users, TrendingUp, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import DescargarPdfButton from "./genaratePdfIPV";
 
 interface IPVProduct {
   nombre: string;
@@ -92,13 +93,13 @@ export default function IPVPage() {
     );
   }
 
-  if (!data) {
+  if (!data || data.products.length === 0 || data.shiftAuthors.length === 0) {
     return (
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="flex items-center justify-center h-40">
             <p className="text-gray-600">
-              No se pudieron cargar los datos del IPV
+              No se encontraron datos del IPV para la fecha seleccionada. 
             </p>
           </CardContent>
         </Card>
@@ -124,10 +125,7 @@ export default function IPVPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Informe de Punto de Venta (IPV)</h1>
-        <Button>
-          <Download className="w-4 h-4 mr-2" />
-          Descargar PDF
-        </Button>
+        <DescargarPdfButton data={data} />
       </div>
 
       {/* Selector de fecha */}
@@ -151,7 +149,7 @@ export default function IPVPage() {
           <Button onClick={handleDateChange}>Consultar</Button>
         </CardContent>
       </Card>
-
+      
       {/* Información general */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

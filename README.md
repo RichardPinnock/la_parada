@@ -203,6 +203,9 @@ dar salida
 
 frontend para asignar location a usuarios
 
+arreglar cuando no se encuentran  datos para el ipv el mensaje como se muestra
 
-
+loading pa los botones 
+---finalizar venta 
+---descargar pdf
 -->

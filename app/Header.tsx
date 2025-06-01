@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut, Plus, FileText } from "lucide-react";
-import DescargarPdfButton from "@/components/genaratePdfIPV";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -25,9 +24,6 @@ export default function Header() {
               Productos
             </Button>
           </Link>
-          <div>
-            <DescargarPdfButton />
-          </div>
           {session ? (
             <>
               <Link href="/products/new">

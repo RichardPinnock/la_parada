@@ -2,10 +2,28 @@
 import { generateIpvPdfDocument } from "@/lib/utils";
 import React from "react";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { Download } from "lucide-react";
 
-const DescargarPdfButton = () => {
+interface PdfData {
+  products: any;
+  shiftAuthors: any;
+  date: string;
+  total: {
+    totalCashAmount: number;
+    totalTransferAmount: number;
+  }
+}
+
+interface DescargarPdfButtonProps {
+  data?: PdfData;
+}
+
+const DescargarPdfButton : React.FC<DescargarPdfButtonProps> = ({ data }) => {
   const handleClick = () => {
-    // hacer peticion al back
+
+    if(!data) {
+      // hacer petición al back
     fetch("/api/ipv")
       .then((response) => {
         if (!response.ok) {
@@ -24,15 +42,21 @@ const DescargarPdfButton = () => {
         toast.error("Error al descargar el IPV");
         console.error("Error al descargar el IPV:", error);
       });
+    } else {
+      // Si ya tenemos los datos, generamos el PDF directamente
+      const { products, shiftAuthors, date } = data;
+      generateIpvPdfDocument(products, shiftAuthors, date);
+      toast.success("IPV descargado correctamente");
+    }
   };
 
   return (
-    <button
-      onClick={handleClick}
-      className="px-4 py-2 m-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+    <Button
+    onClick={handleClick}
     >
-      Descargar IPV
-    </button>
+      <Download className="w-4 h-4 mr-2" />
+      Descargar PDF
+    </Button>
   );
 };
 
