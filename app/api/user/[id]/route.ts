@@ -6,8 +6,8 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
 
     const id = url.pathname.split("/").pop();
-    console.log('id ==>', id);
-    
+    console.log("id ==>", id);
+
     if (!id) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
@@ -16,11 +16,11 @@ export async function GET(request: NextRequest) {
       where: { id },
       include: {
         stockLocations: {
-            select: {
-                stockLocation: true
-            }
+          select: {
+            stockLocation: true,
+          },
         }, // Incluir ubicaciones de stock
-      }
+      },
     });
 
     if (!user) {
@@ -37,6 +37,89 @@ export async function GET(request: NextRequest) {
       { error: "Error al obtener el usuario" },
       { status: 500 }
     );
-    
+  }
+}
+
+// put
+export async function PUT(request: NextRequest) {
+  try {
+    const url = new URL(request.url);
+    const id = url.pathname.split("/").pop();
+
+    if (!id) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const {
+      name,
+      email,
+      password,
+      stockLocationIds,
+      role,
+    }: {
+      name: string;
+      email: string;
+      password: string;
+      stockLocationIds: string[];
+      role: string;
+    } = body;
+
+    // Validar existencia del usuario
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
+    }
+    // Validar existencia de ubicaciones de stock
+    const existingStockLocations = await prisma.stockLocation.findMany({
+      where: {
+        id: {
+          in: stockLocationIds,
+        },
+      },
+    });
+    if (existingStockLocations.length !== stockLocationIds.length) {
+      return NextResponse.json(
+        { error: "Una o más ubicaciones de stock no existen" },
+        { status: 404 }
+      );
+    }
+
+    // Actualizar usuario
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        name,
+        email,
+        password,
+        role,
+        stockLocations: {
+          set: stockLocationIds.map((stockLocationId: string) => ({
+            userId_stockLocationId: { userId: id, stockLocationId },
+          })),
+        },
+      },
+      include: {
+        stockLocations: {
+          select: {
+            stockLocation: true,
+          },
+        }, // Incluir ubicaciones de stock
+      },
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error("Error al actualizar el usuario:", error);
+    return NextResponse.json(
+      { error: "Error al actualizar el usuario" },
+      { status: 500 }
+    );
   }
 }
