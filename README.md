@@ -197,6 +197,8 @@ dar salida
 
 -Frontend de los métodos de pago (paymentMethod) ---opcional
 
+-Frontend para los usuarios (propuesta de quitar el registrar)
+
 ------------------------------------------------------------------
 ! hacer loading al registrar una venta
 ! revisar responsive en el carrito a veces no se puede ver bien los productos
