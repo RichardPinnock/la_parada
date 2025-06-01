@@ -112,7 +112,7 @@ export default function IPVPage() {
     0
   );
   const totalGanancias = data.products.reduce(
-    (sum, product) => sum + product.G,
+    (sum, product) => sum + (product.G ?? 0),
     0
   );
   const totalProductosVendidos = data.products.reduce(
@@ -173,7 +173,7 @@ export default function IPVPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${totalVentas.toFixed(2)}
+              ${totalVentas?.toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -187,7 +187,7 @@ export default function IPVPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              ${totalGanancias.toFixed(2)}
+              ${totalGanancias?.toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -279,10 +279,10 @@ export default function IPVPage() {
                       {product.nombre}
                     </TableCell>
                     <TableCell className="text-right">
-                      ${product.PC.toFixed(2)}
+                      ${product.PC?.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      ${product.PV.toFixed(2)}
+                      ${product.PV?.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">{product.I}</TableCell>
                     <TableCell className="text-right">{product.E}</TableCell>
@@ -290,10 +290,10 @@ export default function IPVPage() {
                     <TableCell className="text-right">{product.R}</TableCell>
                     <TableCell className="text-right">{product.V}</TableCell>
                     <TableCell className="text-right text-green-600 font-semibold">
-                      ${product.T.toFixed(2)}
+                      ${product.T?.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right text-blue-600 font-semibold">
-                      ${product.G.toFixed(2)}
+                      ${product.G != null ? product.G.toFixed(2) : "0.00"}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -305,13 +305,13 @@ export default function IPVPage() {
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Total Ventas</p>
               <p className="text-lg font-bold text-green-600">
-                ${totalVentas.toFixed(2)}
+                ${totalVentas?.toFixed(2)}
               </p>
             </div>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Total Ganancias</p>
               <p className="text-lg font-bold text-blue-600">
-                ${totalGanancias.toFixed(2)}
+                ${totalGanancias?.toFixed(2)}
               </p>
             </div>
           </div>
