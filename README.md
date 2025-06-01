@@ -199,6 +199,8 @@ dar salida
 
 -Frontend para los usuarios (propuesta de quitar el registrar)
 
+-Frontend mejorar la vista de los locales (http://localhost:3000/admin/warehouse)
+
 ------------------------------------------------------------------
 ! hacer loading al registrar una venta
 ! revisar responsive en el carrito a veces no se puede ver bien los productos
@@ -210,4 +212,6 @@ arreglar cuando no se encuentran  datos para el ipv el mensaje como se muestra
 loading pa los botones 
 ---finalizar venta 
 ---descargar pdf
+
+Botones crear producto y producto en el header tsx quitarlo pa los q no sean admin
 -->
