@@ -52,6 +52,7 @@ export default function POSSystem() {
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [transferCode, setTransferCode] = useState<string>("");
+  const [sendSale, setSendSale] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProducts();
@@ -154,7 +155,7 @@ export default function POSSystem() {
 
   const finalizeSale = async () => {
     console.log("Finalizando venta...");
-
+    setSendSale(true);
     if (
       carrito.length > 0 &&
       Number.parseFloat(cantidadPagada) >= total &&
@@ -190,23 +191,27 @@ export default function POSSystem() {
             toast.error("Error al registrar la venta: " + data.error);
             console.log("Error al crear la venta:", data.error);
             setSheetOpen(false);
+            setSendSale(false);
           } else {
             console.log("Venta creada exitosamente:", data);
             toast.success("Venta registrada exitosamente");
             limpiarCarrito();
             setSheetOpen(false);
+            setSendSale(false);
             fetchProducts();
           }
         })
         .catch((error) => {
           toast.error("Error al procesar la venta: " + error.message);
           setSheetOpen(false);
+          setSendSale(false);
           console.log("Error al procesar la venta:", error);
         });
     } else {
       // Optionally, notify the user that the sale cannot be processed.
       toast.error("Debe completar todos los campos para finalizar la venta.");
       setSheetOpen(false);
+      setSendSale(false);
       console.log(
         "No se puede finalizar la venta: carrito vacío o monto insuficiente o usuario no logueado."
       );
@@ -432,7 +437,8 @@ export default function POSSystem() {
                           cantidadPagada === "" ||
                           username === "Invitado" ||
                           selectedPaymentMethod === "" ||
-                          (selectedPaymentMethod === "transferencia" && transferCode === "")
+                          (selectedPaymentMethod === "transferencia" && transferCode === "") ||
+                          sendSale
                         }
                         >
                         <CreditCard className="mr-2 h-4 w-4" />
