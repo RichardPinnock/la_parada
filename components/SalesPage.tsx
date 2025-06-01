@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -30,10 +30,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Search, Eye, Trash2, ShoppingCart, Package } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Eye,
+  Trash2,
+  ShoppingCart,
+  Package,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { useAllStockLocations } from "@/hooks/useStockLocations";
+import { useDebounce } from "@/hooks/debounce";
 
 interface Purchase {
   id: string;
@@ -91,33 +99,53 @@ export default function PurchasesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const debouncedSearch = useDebounce(search, 500);
 
   // Modal states
   const [showNewPurchaseModal, setShowNewPurchaseModal] = useState(false);
   const [showPurchaseDetailModal, setShowPurchaseDetailModal] = useState(false);
-  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(
-    null
-  );
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
   // New purchase form states
-  const [newPurchaseItems, setNewPurchaseItems] = useState<NewPurchaseItem[]>(
-    []
-  );
+  const [newPurchaseItems, setNewPurchaseItems] = useState<NewPurchaseItem[]>([]);
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [unitPrice, setUnitPrice] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch purchases
+  // Ref para detectar el scroll en el fondo para paginado infinito
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // Fetch purchases con paginación
   const fetchPurchases = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/purchase");
+      const response = await fetch(
+        "/api/purchase?page=" +
+          page +
+          "&limit=5&search=" +
+          encodeURIComponent(search)
+      );
       if (!response.ok) throw new Error("Error al obtener compras");
 
       const data = await response.json();
-      setPurchases(Array.isArray(data) ? data : data.purchases || []);
+      const newPurchases: Purchase[] = Array.isArray(data)
+        ? data
+        : data.purchases || [];
+
+      if (page === 1) {
+        setPurchases(newPurchases);
+      } else {
+        setPurchases((prev) => [...prev, ...newPurchases]);
+      }
+      if (newPurchases.length < 5) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
     } catch (error) {
       toast.error("Error al cargar las compras");
       console.error(error);
@@ -141,23 +169,34 @@ export default function PurchasesPage() {
   };
 
   useEffect(() => {
+    // Cuando cambia el page o el debouncedSearch se traen las compras
     fetchPurchases();
-  }, [page, search]);
+  }, [page, debouncedSearch]);
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  // Filter purchases based on search
-  const filteredPurchases = purchases.filter((purchase) => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      purchase.user?.name?.toLowerCase().includes(searchLower) ||
-      purchase.id.toLowerCase().includes(searchLower) ||
-      new Date(purchase.createdAt).toLocaleDateString().includes(search)
+  // useEffect para manejar paginado infinito usando IntersectionObserver
+  useEffect(() => {
+    if (!hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      },
+      { root: null, threshold: 1.0 }
     );
-  });
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [loading, hasMore]);
 
   // Add item to new purchase
   const addItemToPurchase = () => {
@@ -188,7 +227,6 @@ export default function PurchasesPage() {
         },
       ]);
     }
-
     setSelectedProductId("");
     setQuantity(1);
     setUnitPrice(0);
@@ -207,7 +245,6 @@ export default function PurchasesPage() {
       removeItemFromPurchase(productId);
       return;
     }
-
     setNewPurchaseItems(
       newPurchaseItems.map((item) =>
         item.productId === productId ? { ...item, quantity: newQuantity } : item
@@ -218,7 +255,6 @@ export default function PurchasesPage() {
   // Update item price
   const updateItemPrice = (productId: number, newPrice: number) => {
     if (newPrice < 0) return;
-
     setNewPurchaseItems(
       newPurchaseItems.map((item) =>
         item.productId === productId ? { ...item, unitPrice: newPrice } : item
@@ -226,7 +262,7 @@ export default function PurchasesPage() {
     );
   };
 
-  // Calculate total
+  // Calculate total of new purchase
   const calculateTotal = () => {
     return newPurchaseItems.reduce(
       (sum, item) => sum + item.quantity * item.unitPrice,
@@ -240,19 +276,15 @@ export default function PurchasesPage() {
       toast.error("Debes iniciar sesión");
       return;
     }
-
     if (newPurchaseItems.length === 0) {
       toast.error("Agrega al menos un producto");
       return;
     }
-
     if (!selectedLocationId) {
       toast.error("Selecciona una ubicación de stock");
       return;
     }
-
     setSubmitting(true);
-
     try {
       const purchaseData = {
         userId: session.user.id,
@@ -267,9 +299,7 @@ export default function PurchasesPage() {
 
       const response = await fetch("/api/purchase", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(purchaseData),
       });
 
@@ -277,7 +307,6 @@ export default function PurchasesPage() {
         const errorData = await response.json();
         throw new Error(errorData.error || "Error al crear la compra");
       }
-
       toast.success("Compra registrada exitosamente");
       setShowNewPurchaseModal(false);
       resetNewPurchaseForm();
@@ -302,6 +331,7 @@ export default function PurchasesPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Modal para nueva compra */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Gestión de Compras</h1>
         <Dialog
@@ -519,28 +549,32 @@ export default function PurchasesPage() {
         </Dialog>
       </div>
 
-      {/* Search */}
+      {/* Buscador */}
       <div className="flex gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Buscar compras..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              // Al cambiar la búsqueda, reiniciamos la paginación:
+              setPage(1);
+            }}
             className="pl-10"
           />
         </div>
       </div>
 
-      {/* Purchases table */}
+      {/* Tabla de Compras */}
       <Card>
         <CardHeader>
           <CardTitle>
-            Compras Registradas ({filteredPurchases.length})
+            Compras Registradas ({purchases.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loading && page === 1 ? (
             <div className="flex justify-center py-8">
               <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
             </div>
@@ -558,7 +592,7 @@ export default function PurchasesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPurchases.map((purchase) => (
+                  {purchases.map((purchase) => (
                     <TableRow key={purchase.id}>
                       <TableCell className="font-mono text-sm">
                         {purchase.id}
@@ -593,8 +627,7 @@ export default function PurchasesPage() {
                   ))}
                 </TableBody>
               </Table>
-
-              {filteredPurchases.length === 0 && !loading && (
+              {purchases.length === 0 && !loading && (
                 <div className="text-center py-8">
                   <p className="text-gray-500">No se encontraron compras</p>
                 </div>
@@ -604,7 +637,15 @@ export default function PurchasesPage() {
         </CardContent>
       </Card>
 
-      {/* Purchase detail modal */}
+      {/* Ref para detectar el scroll y cargar más */}
+      <div ref={loadMoreRef} className="h-4"></div>
+      {loading && page > 1 && (
+        <div className="flex justify-center py-4">
+          <p>Cargando más...</p>
+        </div>
+      )}
+
+      {/* Modal de detalle de compra */}
       <Dialog
         open={showPurchaseDetailModal}
         onOpenChange={setShowPurchaseDetailModal}
@@ -616,7 +657,6 @@ export default function PurchasesPage() {
               Información completa de la compra
             </DialogDescription>
           </DialogHeader>
-
           {selectedPurchase && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -645,9 +685,7 @@ export default function PurchasesPage() {
                   </p>
                 </div>
               </div>
-
               <Separator />
-
               <div>
                 <Label>Productos</Label>
                 {selectedPurchase.items && selectedPurchase.items.length > 0 ? (
