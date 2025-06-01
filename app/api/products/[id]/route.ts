@@ -1,11 +1,13 @@
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
 ) {
-  const id = parseInt(params.id);
+  const url = new URL(request.url)
+
+  const id = Number(url.pathname.split('/').pop() )
   if (isNaN(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
