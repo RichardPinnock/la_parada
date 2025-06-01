@@ -186,6 +186,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const ganancias = await calculateProfit(
+      firstShiftToday?.createdAt ?? start,
+      latestShiftToday?.endTime ?? end,
+    )
+
     const result = productsInLocation.map(({ product }) => {
       const PC = product.purchasePrice;
       const PV = product.salePrice;
@@ -213,7 +218,8 @@ export async function GET(req: NextRequest) {
 
       const R = (I + E) - V - M;
       const T = V * PV;
-      const G = T - (V * PC);
+      
+      const G = ganancias.products.find((g) => g.productId === product.id)?.profit
 
       return {
         nombre: product.name,
@@ -241,5 +247,105 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.log("[IPV_ERROR]", error);
     throw new Error("Error al procesar la solicitud de IPV");
+  }
+}
+
+interface ProfitResult {
+  productId: number;
+  name: string;
+  quantitySold: number;
+  revenue: number;      // Ingreso total (ventas)
+  realCost: number;     // Costo real FIFO
+  profit: number;       // Ganancia real
+  averagePrice: number; // Precio promedio de venta
+  averageCost: number;  // Costo promedio real
+}
+
+async function calculateProfit(
+  startDate: Date,
+  endDate: Date,
+  // productId?: number // opcional
+) {
+  try {
+    const salesQuery = {
+      createdAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+      // items: productId ? {
+      //   some: {
+      //     productId
+      //   }
+      // } : undefined
+    };
+
+    const sales = await prisma.sale.findMany({
+      where: salesQuery,
+      include: {
+        items: {
+          include: {
+            product: true,
+            costAllocations: true
+          }
+        }
+      }
+    });
+
+    const profitsByProduct = new Map<number, ProfitResult>();
+
+    // Procesar cada venta
+    sales.forEach(sale => {
+      sale.items.forEach(item => {
+        if (!profitsByProduct.has(item.productId)) {
+          profitsByProduct.set(item.productId, {
+            productId: item.productId,
+            name: item.product.name,
+            quantitySold: 0,
+            revenue: 0,
+            realCost: 0,
+            profit: 0,
+            averagePrice: 0,
+            averageCost: 0
+          });
+        }
+
+        const stats = profitsByProduct.get(item.productId)!;
+        const itemRevenue = item.quantity * item.unitPrice;
+        const itemCost = item.costAllocations.reduce(
+          (acc, alloc) => acc + (alloc.quantityUsed * alloc.unitCost), 
+          0
+        );
+
+        stats.quantitySold += item.quantity;
+        stats.revenue += itemRevenue;
+        stats.realCost += itemCost;
+        stats.profit += (itemRevenue - itemCost);
+        stats.averagePrice = stats.revenue / stats.quantitySold;
+        stats.averageCost = stats.realCost / stats.quantitySold;
+      });
+    });
+
+    const results = Array.from(profitsByProduct.values());
+
+    // if (productId) {
+    //   return results[0] || null;
+    // }
+
+    return {
+      products: results,
+      summary: results.reduce((acc, curr) => ({
+        totalRevenue: acc.totalRevenue + curr.revenue, // Ingreso total
+        totalCost: acc.totalCost + curr.realCost, // Costo real total
+        totalProfit: acc.totalProfit + curr.profit // Ganancia total
+      }), {
+        totalRevenue: 0,
+        totalCost: 0,
+        totalProfit: 0
+      })
+    };
+
+  } catch (error) {
+    console.error("[CALCULATE_PROFIT_ERROR]", error);
+    throw new Error("Error calculando ganancias");
   }
 }
