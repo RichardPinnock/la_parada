@@ -24,11 +24,11 @@ export async function GET(request: Request) {
       take: limit,
       include: {
         stockLocations: {
-            select: {
-                stockLocation: true
-            }
+          select: {
+            stockLocation: true,
+          },
         }, // Incluir ubicaciones de stock
-      }
+      },
     });
     // Contar total de usuarios
     const total = await prisma.user.count();
@@ -54,25 +54,33 @@ export async function GET(request: Request) {
 // POST: /api/user
 export async function POST(request: Request) {
   const body = await request.json();
-  const { name, email, password, stockLocationIds, role = "dependiente" }: {
-      name: string;
-      email: string;
-      password: string;
-      stockLocationIds: string[];
-      role: string;
-    }  = body;
+  const {
+    name,
+    email,
+    isActive = true,
+    password,
+    stockLocationIds,
+    role = "dependiente",
+  }: {
+    name: string;
+    email: string;
+    password: string;
+    stockLocationIds: string[];
+    role: string;
+    isActive: boolean;
+  } = body;
 
   try {
     const existingUser = await prisma.user.findUnique({
-      where: { email },      
-    })
+      where: { email },
+    });
     if (existingUser) {
       return NextResponse.json(
         { message: "Existe un usuario con ese email, cámbielo" },
         { status: 400 }
       );
     }
-     // Validar existencia de ubicaciones de stock
+    // Validar existencia de ubicaciones de stock
     const existingStockLocations = await prisma.stockLocation.findMany({
       where: {
         id: {
@@ -92,14 +100,15 @@ export async function POST(request: Request) {
         name,
         email,
         role,
+        isActive,
         password: await bcrypt.hash(password, 10),
         stockLocations: {
           createMany: {
             data: stockLocationIds.map((id) => ({
               stockLocationId: id,
             })),
-          }
-        }
+          },
+        },
       },
     });
 

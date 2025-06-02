@@ -197,17 +197,16 @@ dar salida
 
 -Frontend de los métodos de pago (paymentMethod) ---opcional
 
--Frontend para los usuarios (propuesta de quitar el registrar)
-
 ------------------------------------------------------------------
 ! hacer loading al registrar una venta
 ! revisar responsive en el carrito a veces no se puede ver bien los productos
-
-frontend para asignar location a usuarios
 
 arreglar cuando no se encuentran  datos para el ipv el mensaje como se muestra
 
 loading pa los botones 
 ---finalizar venta 
 ---descargar pdf
+
+me loguee con un correo q no existe y paso no entendi nada
+laMuchachaTrabajaAlante@gmail.com
 -->

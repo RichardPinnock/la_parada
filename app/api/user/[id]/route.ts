@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,15 +55,17 @@ export async function PUT(request: NextRequest) {
     const {
       name,
       email,
-      password,
+      password = null,
       stockLocationIds,
+      isActive = true,
       role,
     }: {
       name: string;
       email: string;
-      password: string;
+      password: string | null;
       stockLocationIds: string[];
       role: string;
+      isActive: boolean;
     } = body;
 
     // Validar existencia del usuario
@@ -97,20 +100,25 @@ export async function PUT(request: NextRequest) {
       data: {
         name,
         email,
-        password,
         role,
+        isActive,
         stockLocations: {
-          set: stockLocationIds.map((stockLocationId: string) => ({
-            userId_stockLocationId: { userId: id, stockLocationId },
-          })),
+          deleteMany: {},
+          createMany: {
+            data: stockLocationIds.map((stockLocationId: string) => ({
+              stockLocationId: stockLocationId,
+            })),
+          },
         },
+        // Solo incluimos password si viene con valor
+        ...(password ? { password: await bcrypt.hash(password, 10) } : {}),
       },
       include: {
         stockLocations: {
           select: {
             stockLocation: true,
           },
-        }, // Incluir ubicaciones de stock
+        },
       },
     });
 

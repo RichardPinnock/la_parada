@@ -18,20 +18,25 @@ export default function Header() {
           La Parada
         </Link>
         <div className="flex items-center space-x-4">
-          <Link href="/products">
-            <Button variant="outline" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Productos
-            </Button>
-          </Link>
-          {session ? (
+          {session?.user?.role === "admin" && (
             <>
+              <Link href="/products">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Productos
+                </Button>
+              </Link>
               <Link href="/products/new">
                 <Button variant="default" className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Crear Productos
                 </Button>
               </Link>
+            </>
+          )}
+
+          {session ? (
+            <>
               <div className="flex items-center space-x-4">
                 <div className="text-sm text-gray-500 text-right">
                   {session.user?.name && <div>{session.user.name}</div>}
