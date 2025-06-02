@@ -209,9 +209,6 @@ loading pa los botones
 ---finalizar venta 
 ---descargar pdf
 
-me loguee con un correo q no existe en BD y paso no entendi nada (me paso dos veces)
-laMuchachaTrabajaAlante@gmail.com
-
 Posibles mejoras 
 -Implementar axios:
 --Loading general

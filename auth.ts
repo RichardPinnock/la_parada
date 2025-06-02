@@ -14,7 +14,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
+          throw new Error("Credenciales inválidas");
         }
 
         const user = await prisma.user.findUnique({
@@ -22,13 +22,15 @@ export const authOptions = {
         });
 
         if (!user) {
-          return await prisma.user.create({
-            data: {
-              name: credentials.name ?? credentials.email,
-              email: credentials.email,
-              password: await bcrypt.hash(credentials.password, 10),
-            },
-          });
+          throw new Error("Credenciales inválidas");
+          // ! Why tu pusiste eto aquí tell me why 
+          // return await prisma.user.create({
+          //   data: {
+          //     name: credentials.name ?? credentials.email,
+          //     email: credentials.email,
+          //     password: await bcrypt.hash(credentials.password, 10),
+          //   },
+          // });
         }
 
         const isCorrectPassword = await bcrypt.compare(
