@@ -1,9 +1,10 @@
 import { registerInventoryMovementForTransfer } from "@/lib/inventory-utils"
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma";
+import { withRole } from "@/lib/guardRole";
 
 
-export async function POST(req: Request) {
+export const POST = withRole(async (req, token) => {
   try {
     const body = await req.json()
     const {
@@ -61,4 +62,4 @@ export async function POST(req: Request) {
     console.log('[TRANSFER_ERROR]', error)
     return NextResponse.json({ error: 'Error al procesar la transferencia' }, { status: 500 })
   }
-}
+})

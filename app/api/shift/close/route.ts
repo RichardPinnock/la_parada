@@ -3,9 +3,10 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
+import { withRole } from "@/lib/guardRole";
 
 // Endpoint para cerrar el turno actual del usuario logueado (si tiene mas de un local falla)
-export async function GET(request: Request) {
+export const GET = withRole(async (req, token) =>{
   try {
     const session = await getServerSession(authOptions);
     //   console.log("session ===>>", session);
@@ -91,7 +92,7 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+})
 
 
 async function CloseSnapshots(stockLocationId:string) {

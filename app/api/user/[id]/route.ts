@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { withRole } from "@/lib/guardRole";
 
-export async function GET(request: NextRequest) {
+export const GET = withRole(async (req: NextRequest, token) => {
   try {
-    const url = new URL(request.url);
+    const url = new URL(req.url);
 
     const id = url.pathname.split("/").pop();
     console.log("id ==>", id);
@@ -39,19 +40,19 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+})
 
 // put
-export async function PUT(request: NextRequest) {
+export const PUT = withRole(async (req: NextRequest, token) => {
   try {
-    const url = new URL(request.url);
+    const url = new URL(req.url);
     const id = url.pathname.split("/").pop();
 
     if (!id) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body = await req.json();
     const {
       name,
       email,
@@ -130,4 +131,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+})

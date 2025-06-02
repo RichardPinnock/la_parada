@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { withRole } from '@/lib/guardRole';
 
 // GET /api/stockLocation - list all stock locations
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
+export const GET = withRole(async (req, token) => {
+    const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const skip = (page - 1) * limit;
@@ -45,12 +46,12 @@ export async function GET(request: Request) {
         console.log('error al listar stockLocations ',error);
         return NextResponse.json({ error: "Error al obtener las ubicaciones de stock" }, { status: 500 });
     }
-}
+})
 
 // POST /api/stockLocation - create a new stock location
-export async function POST(request: Request) {
+export const POST = withRole(async (req, token) => {
     try {
-        const body = await request.json();
+        const body = await req.json();
         const newStockLocation = await prisma.stockLocation.create({
             data: { ...body }
         });
@@ -59,4 +60,4 @@ export async function POST(request: Request) {
         console.log('error al crear stockLocation', error);
         return NextResponse.json({ error: "Error al crear la ubicación de stock" }, { status: 500 });
     }
-}
+})

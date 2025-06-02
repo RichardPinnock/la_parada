@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { withRole } from "@/lib/guardRole";
 
-export async function GET() {
+export const GET = withRole(async (req, token) =>{
   try {
     const paymentMethods = await prisma.paymentMethod.findMany();
     if (!paymentMethods) {
@@ -21,11 +22,11 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withRole(async (req, token) => {
   try {
-    const data = await request.json();
+    const data = await req.json();
     const newPaymentMethod = await prisma.paymentMethod.create({
       data,
     });
@@ -39,4 +40,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

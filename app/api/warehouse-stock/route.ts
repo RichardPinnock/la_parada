@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from "@/lib/prisma";
+import { withRole } from '@/lib/guardRole';
 
 
 // GET /api/warehouse-stock - Obtiene todos los registros de warehouseStock
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
+export const GET = withRole(async (req: NextRequest, token) => {
+    const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const skip = (page - 1) * limit;
@@ -49,14 +50,17 @@ export async function GET(request: Request) {
         });
     } catch (error) {
         console.log('error al listar warehouseStocks', error);
-        return NextResponse.error();
+        return NextResponse.json(
+            { error: 'Error al obtener los registros de warehouseStock' },
+            { status: 500 }
+        );
     }
-}
+})
 
 // POST /api/warehouse-stock - Crea un nuevo registro de warehouseStock
-export async function POST(request: Request) {
+export const POST = withRole(async (req, token) => {
     try {
-        const data = await request.json();
+        const data = await req.json();
         const { productId, quantity, locationId } = data;
 
         // Valida o procesa 'data' según sea necesario
@@ -75,6 +79,9 @@ export async function POST(request: Request) {
         //     { error: 'Ocurrió un error inesperado al crear warehouse-stock, por favor comuníquese con soporte' },
         //     { status: 500 }
         // );
-        return NextResponse.error();
+        return NextResponse.json(
+            { error: 'Error al crear el registro de warehouseStock' },
+            { status: 500 }
+        );
     }
-}
+})

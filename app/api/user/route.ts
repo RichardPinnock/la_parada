@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { withRole } from "@/lib/guardRole";
 
 // GET: /api/user?limit=10&page=1
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+export const GET = withRole(async (req, token) => {
+  const { searchParams } = new URL(req.url);
   // Parámetros de paginación, con valores por defecto
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -49,11 +50,11 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+})
 
 // POST: /api/user
-export async function POST(request: Request) {
-  const body = await request.json();
+export const POST = withRole(async (req, token) => {
+  const body = await req.json();
   const {
     name,
     email,
@@ -120,4 +121,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

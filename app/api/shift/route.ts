@@ -1,8 +1,9 @@
+import { withRole } from "@/lib/guardRole";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 
-export async function GET(request: Request) {
+export const GET = withRole(async (req, token) => {
     try {
         const shifts = await prisma.shift.findMany({
             include: {
@@ -42,4 +43,4 @@ export async function GET(request: Request) {
         console.error("Error fetching shifts", error);
         return NextResponse.json({ error: "Failed to fetch shifts" }, { status: 500 });
     }
-}
+})

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { withRole } from "@/lib/guardRole";
 
 // Listar todos los inventoryAdjustments
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
+export const GET = withRole( async(req: Request, token) => {
+    const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
@@ -67,12 +68,13 @@ export async function GET(request: Request) {
     } catch (error) {
         return NextResponse.json({ error: "Error al obtener los inventoryAdjustments" }, { status: 500 });
     }
-}
+})
+// const GET = withRole(async (req, token) =>
 
 // Crear un nuevo inventoryAdjustment
-export async function POST(request: Request) {
+export const POST = withRole( async(req: Request, token) => {
     try {
-        const body = await request.json();
+        const body = await req.json();
         const {
             userId,
             locationId,
@@ -93,4 +95,4 @@ export async function POST(request: Request) {
     } catch (error) {
         return NextResponse.json({ error: "Error al crear el inventoryAdjustment" }, { status: 500 });
     }
-}
+})

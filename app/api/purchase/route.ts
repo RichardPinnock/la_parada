@@ -1,17 +1,18 @@
 import { authOptions } from "@/auth";
+import { withRole } from "@/lib/guardRole";
 import { registerInventoryMovementFromPurchase } from "@/lib/inventory-utils";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export const GET = withRole(async (req: NextRequest, token) => {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const search = searchParams.get("search") || "";
@@ -82,11 +83,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withRole(async (req: NextRequest, token) => {
   try {
-    const body = await request.json();
+    const body = await req.json();
     const {
       userId,
       total,
@@ -134,4 +135,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

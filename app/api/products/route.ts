@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
 import { parse } from "path";
+import { withRole } from "@/lib/guardRole";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -73,9 +74,9 @@ export async function GET(request: Request) {
   return NextResponse.json({ products: sorted, totalPages });
 }
 
-export async function POST(request: Request) {
+export const POST = withRole(async (req, token) => {
   try {
-    const body = await request.json();
+    const body = await req.json();
     const { name, purchasePrice, salePrice, imageName, isActive, notes } = body;
     const product = await prisma.product.create({
       data: {
@@ -92,4 +93,4 @@ export async function POST(request: Request) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+})

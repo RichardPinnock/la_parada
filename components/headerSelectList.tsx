@@ -27,7 +27,7 @@ export default function HeaderNavMenu({ role = "" }: HeaderNavMenuProps) {
         type="button"
         className="px-4 py-2 bg-gray-50 text-black font-medium rounded hover:bg-gray-200 transition-colors focus:outline-none"
       >
-        Menú
+        Panel de administración
       </button>
       {/* Dropdown visible al hacer hover en el contenedor */}
       <div className="absolute left-0 mt-2 w-56 rounded shadow-lg bg-white border border-gray-200 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 z-10">

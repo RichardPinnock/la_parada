@@ -248,8 +248,11 @@ export default function POSSystem() {
             </div>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="relative">
+                <Button variant="outline" className="relative group">
                   <ShoppingCart className="h-5 w-5" />
+                  <span className="absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
+                  Registrar Venta
+                  </span>
                   {carrito.length > 0 && (
                     <Badge className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0 flex items-center justify-center">
                       {carrito.reduce((sum, item) => sum + item.cantidad, 0)}

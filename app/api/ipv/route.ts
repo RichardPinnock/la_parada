@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
+import { withRole } from "@/lib/guardRole";
 
-export async function GET(req: NextRequest) {
+export const GET = withRole(async (req, token) => {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -193,7 +194,7 @@ export async function GET(req: NextRequest) {
     products: result,
     total: { totalCashAmount, totalTransferAmount },
   });
-}
+})
 
 async function calculateProfit(startDate: Date, endDate: Date) {
   const sales = await prisma.sale.findMany({
