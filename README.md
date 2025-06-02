@@ -195,6 +195,8 @@ Once the server is running, visit `http://localhost:3000` to start using the app
 -Frontend de ajustes en los turnos (adjustment)
 dar salida
 
+
+
 -Frontend de los métodos de pago (paymentMethod) ---opcional
 
 ------------------------------------------------------------------
@@ -209,4 +211,13 @@ loading pa los botones
 
 me loguee con un correo q no existe y paso no entendi nada
 laMuchachaTrabajaAlante@gmail.com
+
+Rutas accesibles desde el pos y protección  de rutas
+--Rutas fallan cuando estas en otra seccion q no es el localHost:4000
+
+
+Posibles mejoras 
+-Implementar axios:
+--Loading general
+--Escalable para LOGGING - HEADERS - RETRY (principalmente logging)
 -->

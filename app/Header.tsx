@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut, Plus, FileText } from "lucide-react";
+import HeaderNavMenu from "@/components/headerSelectList";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -20,7 +21,7 @@ export default function Header() {
         <div className="flex items-center space-x-4">
           {session?.user?.role === "admin" && (
             <>
-              <Link href="/products">
+              {/* <Link href="/products">
                 <Button variant="outline" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Productos
@@ -31,9 +32,10 @@ export default function Header() {
                   <Plus className="w-4 h-4" />
                   Crear Productos
                 </Button>
-              </Link>
+              </Link> */}
             </>
           )}
+          <HeaderNavMenu role={session?.user?.role || ""}/>
 
           {session ? (
             <>
