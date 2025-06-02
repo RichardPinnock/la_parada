@@ -40,6 +40,7 @@ export default function POSSystem() {
 
   const username = session?.user?.name || "Invitado";
   const userId = session?.user?.id || "";
+  const role = session?.user?.role || "";
   // Estados
   const [productos, setProductos] = useState<Product[]>([]); //! PLP
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]); //! PLP
@@ -90,12 +91,12 @@ export default function POSSystem() {
   // Función para validar el carrito
   const validateCarrito = () => {
     // Verifica si algún producto tiene una cantidad menor o igual a 0
-    const tieneCantidadInvalida = carrito.some(
+    const hasInvalidQuantity = carrito.some(
       (item) => item.warehouseStocks[0].quantity < item.cantidad
     );
-    console.log("tieneCantidadInvalida", tieneCantidadInvalida);
+    console.log("tieneCantidadInvalida", hasInvalidQuantity);
 
-    setInvalidQuantity(tieneCantidadInvalida);
+    setInvalidQuantity(hasInvalidQuantity);
   };
 
   // Llamada a la validación cada vez que cambia el carrito
@@ -119,6 +120,15 @@ export default function POSSystem() {
 
   // Agregar producto al carrito
   const agregarAlCarrito = (producto: Product) => {
+    if(role != "dependiente") {
+      if(role == "admin"){
+        toast.error("Los administradores no pueden realizar ventas, por favor, inicie sesión con un usuario dependiente");
+        return;
+      }
+      toast.error("No tienes permiso para agregar productos al carrito");
+      return;
+
+    }
     setCarrito((prevCarrito) => {
       const itemExistente = prevCarrito.find((item) => {
         if (
@@ -527,7 +537,8 @@ export default function POSSystem() {
                           (selectedPaymentMethod === "transferencia" &&
                             transferCode === "") ||
                           sendSale ||
-                          invalidQuantity
+                          invalidQuantity ||
+                          role == "admin"
                         }
                       >
                         <CreditCard className="mr-2 h-4 w-4" />
