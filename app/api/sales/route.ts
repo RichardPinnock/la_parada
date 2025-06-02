@@ -349,7 +349,7 @@ async function registerCostAllocationForSaleItem(
   const availablePurchases = await tx.purchaseItem.findMany({
     where: {
       productId,
-      locationId,
+//      locationId,   //evito buscar por locationId para que tome las compras de todas las ubicaciones ya q se puede transferir
       quantity: { gt: 0 }
     },
     orderBy: { 
