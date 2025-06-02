@@ -9,16 +9,16 @@ interface HeaderNavMenuProps {
 export default function HeaderNavMenu({ role = "" }: HeaderNavMenuProps) {
   // Definir las opciones según el role
   const menuOptions =
-    role === "admin"
-      ? [
-          { label: "Ver Productos", href: "/products" },
-          { label: "Crear Productos", href: "/products/new" },
-          { label: "Realizar Compras", href: "/purchase" },
-          { label: "Gestión de Usuarios", href: "admin/user" },
-          { label: "Gestión de Locales", href: "admin/warehouse" },
-          { label: "IPV", href: "/ipv" },
-        ]
-      : [{ label: "IPV", href: "/ipv" }];
+  role === "admin"
+    ? [
+        { label: "Ver Productos", href: "/products" },
+        { label: "Crear Productos", href: "/products/new" },
+        { label: "Realizar Compras", href: "/purchase" },
+        { label: "Gestión de Usuarios", href: "/admin/user" },
+        { label: "Gestión de Locales", href: "/admin/warehouse" },
+        { label: "IPV", href: "/ipv" },
+      ]
+    : [{ label: "IPV", href: "/ipv" }];
 
   return (
     <div className="relative group">
