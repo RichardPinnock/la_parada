@@ -61,6 +61,7 @@ function ProductsList() {
                   <ProductCard product={product} mode="management" 
                     stockLocations={stockLocations || []}
                     session={session}
+                    refresh={fetchProducts} // Callback para refrescar datos
                   />
                 </li>
               ))}

@@ -14,6 +14,7 @@ interface ProductCardProps {
   mode?: "pos" | "management";
   stockLocations: StockLocation[];
   session: Session | null;
+  refresh: () => void; // Callback para refrescar datos o notificar al padre
 }
 
 export function ProductCard({
@@ -22,6 +23,7 @@ export function ProductCard({
   mode = "pos",
   stockLocations,
   session,
+  refresh,
 }: ProductCardProps) {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const user = session?.user || null;
@@ -108,6 +110,7 @@ export function ProductCard({
         open={showTransferModal}
         onOpenChange={setShowTransferModal}
         session={session}
+        onTransferComplete={refresh}
       />
     </Card>
   );

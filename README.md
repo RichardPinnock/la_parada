@@ -221,11 +221,6 @@ Posibles mejoras
 --Loading general
 --Escalable para LOGGING - HEADERS - RETRY (principalmente logging)
 
-error en products refrescar productos cuando se transfiere
-
-card de transferir producto, mostrar mas llamativo el nombre
-api de transferir producto ser m'as exacto en mensaje de stock, diciendo cantidad disponible de insumos
-
 
 carrito de compras modificar valor manualmente xa evitar incrementar de 1 en 1
 

@@ -29,6 +29,7 @@ interface TransferStockModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   session: Session | null;
+  onTransferComplete: () => void; // Callback para refrescar datos o notificar al padre
 }
 
 export function TransferStockModal({
@@ -37,6 +38,7 @@ export function TransferStockModal({
   open,
   onOpenChange,
   session,
+  onTransferComplete,
 }: TransferStockModalProps) {
   const [fromLocationId, setFromLocationId] = useState<string>("");
   const [toLocationId, setToLocationId] = useState<string>("");
@@ -98,7 +100,7 @@ export function TransferStockModal({
       onOpenChange(false);
 
       // Aquí puedes agregar lógica para refrescar los datos del producto
-      // o emitir un evento para que el componente padre actualice los datos
+      onTransferComplete();
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -128,7 +130,7 @@ export function TransferStockModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Transferir Stock</DialogTitle>
+          <DialogTitle>Transferir Stock - {product.name}</DialogTitle>
           <DialogDescription>
             Transfiere stock de {product.name} entre localizaciones
           </DialogDescription>

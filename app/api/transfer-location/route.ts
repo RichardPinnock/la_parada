@@ -46,7 +46,7 @@ export const POST = withRole(async (req, token) => {
     }
     const fromLocationQuantity = fromLocationStock.warehouseStocks[0].quantity
     if (fromLocationQuantity < quantity) {
-      return NextResponse.json({ error: 'Stock insuficiente en la ubicación de origen' }, { status: 400 })
+      return NextResponse.json({ error: `Stock insuficiente en la ubicación de origen: solo hay ${fromLocationQuantity} unidades disponibles.` }, { status: 400 })
     }
 
     const transferId = await registerInventoryMovementForTransfer({
