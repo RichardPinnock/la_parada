@@ -169,7 +169,7 @@ export const POST = withRole(async (req, token) =>{
                         transferCode: transferCode,
                     }
                 })
-                if (sales.length > 0) {
+                if (sales.length > 0 && transferCode) {
                     throw new Error('Ya existe una venta con este código de transferencia');
                 }
 
@@ -219,8 +219,8 @@ export const POST = withRole(async (req, token) =>{
 
                 return newSale;
             }, {
-                timeout: 10000, // 10 segundos en lugar de 5
-                maxWait: 8000   // tiempo máximo de espera para iniciar la transacción
+                timeout: 15000, // 10 segundos en lugar de 5
+                maxWait: 10000   // tiempo máximo de espera para iniciar la transacción
             }
         );
         
