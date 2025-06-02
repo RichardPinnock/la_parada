@@ -102,7 +102,7 @@ export function ProductCard({
           </Button>
         )}
 
-        {product.warehouseStocks.length > 0 &&
+        {user && product.warehouseStocks.length > 0 &&
           product.warehouseStocks.reduce(
             (sum, stock) => sum + stock.quantity,
             0

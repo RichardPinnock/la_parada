@@ -19,7 +19,7 @@ export default function Header() {
           La Parada
         </Link>
         <div className="flex items-center space-x-4">
-          {session?.user?.role === "admin" && (
+          {session?.user && (
             <>
               {/* <Link href="/products">
                 <Button variant="outline" className="flex items-center gap-2">
@@ -33,9 +33,9 @@ export default function Header() {
                   Crear Productos
                 </Button>
               </Link> */}
+            <HeaderNavMenu role={session?.user?.role || ""}/>
             </>
           )}
-          <HeaderNavMenu role={session?.user?.role || ""}/>
 
           {session ? (
             <>
