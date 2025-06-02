@@ -16,7 +16,7 @@ export interface RegisterMovementParams {
   userId: string    // opcional si quieres registrar trazabilidad
 }
 
-export async function registerInventoryMovement({
+async function registerInventoryMovement({
   productId,
   locationId,
   quantity,

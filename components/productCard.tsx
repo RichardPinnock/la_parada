@@ -7,6 +7,7 @@ import { TransferStockModal } from "./TransferStockModal";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Session } from "next-auth";
+import { AdjustmentModal } from "./registerAdjustment";
 
 interface ProductCardProps {
   product: Product;
@@ -26,6 +27,7 @@ export function ProductCard({
   refresh,
 }: ProductCardProps) {
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const user = session?.user || null;
 
   const cardContent = (
@@ -55,35 +57,34 @@ export function ProductCard({
         {product.isActive === false && (
           <p className="text-red-500 text-sm mt-1">Producto inactivo</p>
         )}
-        { user && (
+        {user && (
           <>
-          {product.warehouseStocks.length === 0 ? (
-          <span className="text-red-400 ml-2 text-xs text-center">
-            No hay este producto en ningún local.
-          </span>
-        ) : (
-          product.warehouseStocks.length > 0 && (
-            <>
-              {product.warehouseStocks.slice(0, 3).map((stock) => (
-                <p
-                  key={stock.id}
-                  className="text-gray-500 text-sm mt-1 text-center"
-                >
-                  {stock.location.name}: {stock.quantity}
-                </p>
-              ))}
-              {product.warehouseStocks.length > 3 && (
-                <p className="text-gray-400 text-xs mt-1 text-center">
-                  Más almacenes...
-                </p>
-              )}
-            </>
-          )
-        )}
-
+            {product.warehouseStocks.length === 0 ? (
+              <span className="text-red-400 ml-2 text-xs text-center">
+                No hay este producto en ningún local.
+              </span>
+            ) : (
+              product.warehouseStocks.length > 0 && (
+                <>
+                  {product.warehouseStocks.slice(0, 3).map((stock) => (
+                    <p
+                      key={stock.id}
+                      className="text-gray-500 text-sm mt-1 text-center"
+                    >
+                      {stock.location.name}: {stock.quantity}
+                    </p>
+                  ))}
+                  {product.warehouseStocks.length > 3 && (
+                    <p className="text-gray-400 text-xs mt-1 text-center">
+                      Más almacenes...
+                    </p>
+                  )}
+                </>
+              )
+            )}
           </>
         )}
-        
+
         {/* Botón de transferencia solo en modo management */}
         {mode === "management" && product.warehouseStocks.length > 0 && (
           <Button
@@ -101,6 +102,25 @@ export function ProductCard({
           </Button>
         )}
 
+        {product.warehouseStocks.length > 0 &&
+          product.warehouseStocks.reduce(
+            (sum, stock) => sum + stock.quantity,
+            0
+          ) > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowAdjustmentModal(true);
+              }}
+            >
+              Registrar Ajuste
+            </Button>
+          )}
+
         {/* <p className="text-gray-600 text-sm">{product.warehouseStocks[0].quantity} en stock</p> */}
       </CardContent>
 
@@ -111,6 +131,14 @@ export function ProductCard({
         onOpenChange={setShowTransferModal}
         session={session}
         onTransferComplete={refresh}
+      />
+
+      <AdjustmentModal
+        product={product}
+        open={showAdjustmentModal}
+        onOpenChange={setShowAdjustmentModal}
+        session={session}
+        onComplete={refresh}
       />
     </Card>
   );
@@ -130,9 +158,15 @@ export function ProductCard({
       className="block h-full"
       tabIndex={0}
       role="button"
-      onClick={() => onSelect?.(product)}
+      onClick={(e) => {
+        if (!showTransferModal && !showAdjustmentModal) {
+          onSelect?.(product);
+        }
+      }}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onSelect?.(product);
+        if (!showTransferModal && !showAdjustmentModal) {
+          if (e.key === "Enter" || e.key === " ") onSelect?.(product);
+        }
       }}
     >
       {cardContent}

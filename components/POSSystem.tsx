@@ -493,6 +493,7 @@ export default function POSSystem() {
                     onSelect={agregarAlCarrito}
                     stockLocations={stockLocations || []}
                     session={session}
+                    refresh={fetchProducts} // Callback para refrescar datos
                   />
                 </div>
               );
