@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, ShoppingCart, Plus, Minus, X, CreditCard } from "lucide-react";
+import { CreditCard, Minus, Plus, Search, ShoppingCart, X } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -19,8 +18,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import Image from "next/image";
 import { ProductCard } from "@/components/productCard";
+import { useAllStockLocations } from "@/hooks/useStockLocations";
 import { Product } from "@/lib/models/products";
 import { toast } from "sonner";
 import {
@@ -30,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { useAllStockLocations } from "@/hooks/useStockLocations";
 
 interface ItemCarrito extends Product {
   cantidad: number;
@@ -39,7 +37,6 @@ interface ItemCarrito extends Product {
 export default function POSSystem() {
   const { stockLocations, error } = useAllStockLocations();
   const { data: session } = useSession();
-  // console.log("Session data:", session);
 
   const username = session?.user?.name || "Invitado";
   const userId = session?.user?.id || "";
