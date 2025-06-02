@@ -87,6 +87,9 @@ export const POST = withRole(async (req, token) =>{
         if (!userId || !paymentMethodName || !total || !shiftId) {
             return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
         }
+        if (paymentMethodName === 'transferencia' && !transferCode) {
+            throw new Error('Código de transferencia es requerido para este método de pago');
+        }
 
         // const shift = await CreateShiftToday(userId);
         // const paymentMethod = await prisma.paymentMethod.findUnique({
@@ -160,6 +163,15 @@ export const POST = withRole(async (req, token) =>{
                     where: { name: paymentMethodName },
                 });
                 if (!paymentMethod) throw new Error('Método de pago no encontrado');
+                
+                const sales = await tx.sale.findMany({
+                    where: {
+                        transferCode: transferCode,
+                    }
+                })
+                if (sales.length > 0) {
+                    throw new Error('Ya existe una venta con este código de transferencia');
+                }
 
                 // 3. Crear la venta con sus items
                 const newSale = await tx.sale.create({

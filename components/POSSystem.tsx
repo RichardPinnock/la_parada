@@ -51,6 +51,10 @@ export default function POSSystem() {
   const [vuelto, setVuelto] = useState<number>(0); //! PLP
   const [sheetOpen, setSheetOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [invalidQuantity, setInvalidQuantity] = useState<boolean>(false);
+  const [inputQuantities, setInputQuantities] = useState<
+    Record<number, string>
+  >({});
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("");
@@ -86,11 +90,35 @@ export default function POSSystem() {
     0
   );
 
+  // Función para validar el carrito
+  const validateCarrito = () => {
+    // Verifica si algún producto tiene una cantidad menor o igual a 0
+    const tieneCantidadInvalida = carrito.some(
+      (item) => item.warehouseStocks[0].quantity < item.cantidad
+    );
+    console.log("tieneCantidadInvalida", tieneCantidadInvalida);
+
+    setInvalidQuantity(tieneCantidadInvalida);
+  };
+
+  // Llamada a la validación cada vez que cambia el carrito
+  useEffect(() => {
+    validateCarrito();
+  }, [total]);
+
   // Calcular vuelto cuando cambia la cantidad pagada o el total
   useEffect(() => {
     const pagado = Number.parseFloat(cantidadPagada) || 0;
     setVuelto(pagado !== 0 ? pagado - total : 0);
   }, [cantidadPagada, total]);
+
+  useEffect(() => {
+    if (selectedPaymentMethod === "transferencia") {
+      setCantidadPagada(total.toFixed(2));
+    } else {
+      setCantidadPagada("");
+    }
+  }, [selectedPaymentMethod, total]);
 
   // Agregar producto al carrito
   const agregarAlCarrito = (producto: Product) => {
@@ -105,18 +133,20 @@ export default function POSSystem() {
       });
 
       if (itemExistente) {
-        return prevCarrito.map((item) =>
-          item.id === producto.id
-            ? {
-                ...item,
-                cantidad:
-                  item.warehouseStocks[0].quantity > item.cantidad
-                    ? item.cantidad + 1
-                    : (toast.error(`No hay suficiente stock para ${item.name}`),
-                      item.cantidad),
-              }
-            : item
-        );
+        if (
+          itemExistente.warehouseStocks[0].quantity > itemExistente.cantidad
+        ) {
+          // Se incrementa la cantidad
+          return prevCarrito.map((item) =>
+            item.id === producto.id
+              ? { ...item, cantidad: item.cantidad + 1 }
+              : item
+          );
+        } else {
+          // No hay suficiente stock para incrementar, mostramos error y retornamos el carrito sin cambios
+          toast.error(`No hay suficiente stock para ${producto.name}`);
+          return prevCarrito;
+        }
       } else {
         // Verificar si hay stock disponible
         if (
@@ -251,7 +281,7 @@ export default function POSSystem() {
                 <Button variant="outline" className="relative group">
                   <ShoppingCart className="h-5 w-5" />
                   <span className="absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
-                  Registrar Venta
+                    Registrar Venta
                   </span>
                   {carrito.length > 0 && (
                     <Badge className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0 flex items-center justify-center">
@@ -262,7 +292,7 @@ export default function POSSystem() {
               </SheetTrigger>
               <SheetContent className="w-full sm:max-w-md">
                 <SheetHeader>
-                  <SheetTitle>Carrito de Compra</SheetTitle>
+                  <SheetTitle>Carrito de Venta</SheetTitle>
                   <SheetDescription>
                     Productos seleccionados para la venta actual
                   </SheetDescription>
@@ -276,56 +306,104 @@ export default function POSSystem() {
                     ) : (
                       <div className="space-y-4">
                         {carrito.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={item.imageName || "/placeholder.svg"}
-                                alt={item.name}
-                                className="h-12 w-12 rounded-md object-cover"
-                              />
-                              <div>
-                                <p className="font-medium">{item.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  ${item.salePrice.toFixed(2)} x {item.cantidad}
-                                </p>
+                          <div key={item.id} className="flex flex-col">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={item.imageName || "/placeholder.svg"}
+                                  alt={item.name}
+                                  className="h-12 w-12 rounded-md object-cover"
+                                />
+                                <div>
+                                  <p className="font-medium">{item.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    ${item.salePrice.toFixed(2)} x{" "}
+                                    {item.cantidad}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() =>
+                                    actualizarCantidad(
+                                      item.id,
+                                      item.cantidad - 1
+                                    )
+                                  }
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </Button>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  value={
+                                    inputQuantities[item.id] !== undefined
+                                      ? inputQuantities[item.id]
+                                      : item.cantidad.toString()
+                                  }
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Permite que el usuario borre completamente el input para escribir
+                                    setInputQuantities((prev) => ({
+                                      ...prev,
+                                      [item.id]: value,
+                                    }));
+                                  }}
+                                  onBlur={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "" || Number(value) < 1) {
+                                      // Si se borra el valor o es menor que 1, se elimina el producto del carrito
+                                      actualizarCantidad(item.id, 0);
+                                      setInputQuantities((prev) => {
+                                        const newState = { ...prev };
+                                        delete newState[item.id];
+                                        return newState;
+                                      });
+                                    } else {
+                                      // Sino, se actualiza la cantidad
+                                      const newQuantity = Number(value);
+                                      actualizarCantidad(item.id, newQuantity);
+                                      setInputQuantities((prev) => ({
+                                        ...prev,
+                                        [item.id]: newQuantity.toString(),
+                                      }));
+                                    }
+                                  }}
+                                  className="w-14 text-center border rounded px-1 py-0.5"
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() =>
+                                    actualizarCantidad(
+                                      item.id,
+                                      item.cantidad + 1
+                                    )
+                                  }
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() => eliminarDelCarrito(item.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  actualizarCantidad(item.id, item.cantidad - 1)
-                                }
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span className="w-8 text-center">
-                                {item.cantidad}
+                            {item.cantidad >
+                              item.warehouseStocks[0].quantity && (
+                              <span className="mt-1 text-xs text-red-500">
+                                Se ha excedido la cantidad disponible
                               </span>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  actualizarCantidad(item.id, item.cantidad + 1)
-                                }
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive"
-                                onClick={() => eliminarDelCarrito(item.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -335,7 +413,7 @@ export default function POSSystem() {
                   <div className="mt-4 space-y-4">
                     <Separator />
                     <div className="flex justify-between text-lg font-medium">
-                      <span>Total:</span>
+                      <span>Total a pagar:</span>
                       <span>${total.toFixed(2)}</span>
                     </div>
 
@@ -389,49 +467,52 @@ export default function POSSystem() {
                       </div>
                     )}
 
-                    <div className="space-y-2">
-                      <label htmlFor="pago" className="text-sm font-medium">
-                        Cantidad pagada:
-                      </label>
-                      <Input
-                        id="pago"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={cantidadPagada}
-                        onChange={(e) => setCantidadPagada(e.target.value)}
-                        placeholder="Ingrese el monto recibido"
-                      />
-                    </div>
-
-                    {Number.parseFloat(cantidadPagada) > 0 && (
-                      <div className="rounded-lg bg-muted p-4">
-                        <div className="flex justify-between text-sm">
-                          <span>Pagado:</span>
-                          <span>
-                            $
-                            {Number.parseFloat(cantidadPagada).toFixed(2) ||
-                              "0.00"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Total:</span>
-                          <span>${total.toFixed(2)}</span>
-                        </div>
-                        <Separator className="my-2" />
-                        <div className="flex justify-between font-bold">
-                          <span>Vuelto:</span>
-                          <span className={vuelto < 0 ? "text-red-500" : ""}>
-                            ${vuelto.toFixed(2)}
-                          </span>
-                        </div>
-                        {username === "Invitado" && (
-                          <span className="text-red-500 text-xs">
-                            Inicie sesión para registrar la venta
-                          </span>
-                        )}
+                    {selectedPaymentMethod !== "transferencia" && (
+                      <div className="space-y-2">
+                        <label htmlFor="pago" className="text-sm font-medium">
+                          Cantidad pagada:
+                        </label>
+                        <Input
+                          id="pago"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={cantidadPagada}
+                          onChange={(e) => setCantidadPagada(e.target.value)}
+                          placeholder="Ingrese el monto recibido"
+                        />
                       </div>
                     )}
+
+                    {Number.parseFloat(cantidadPagada) > 0 &&
+                      selectedPaymentMethod !== "transferencia" && (
+                        <div className="rounded-lg bg-muted p-4">
+                          <div className="flex justify-between text-sm">
+                            <span>Pagado:</span>
+                            <span>
+                              $
+                              {Number.parseFloat(cantidadPagada).toFixed(2) ||
+                                "0.00"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Total:</span>
+                            <span>${total.toFixed(2)}</span>
+                          </div>
+                          <Separator className="my-2" />
+                          <div className="flex justify-between font-bold">
+                            <span>Vuelto:</span>
+                            <span className={vuelto < 0 ? "text-red-500" : ""}>
+                              ${vuelto.toFixed(2)}
+                            </span>
+                          </div>
+                          {username === "Invitado" && (
+                            <span className="text-red-500 text-xs">
+                              Inicie sesión para registrar la venta
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                     <div className="flex gap-2">
                       <Button
@@ -448,7 +529,8 @@ export default function POSSystem() {
                           selectedPaymentMethod === "" ||
                           (selectedPaymentMethod === "transferencia" &&
                             transferCode === "") ||
-                          sendSale
+                          sendSale ||
+                          invalidQuantity
                         }
                       >
                         <CreditCard className="mr-2 h-4 w-4" />

@@ -25,11 +25,11 @@ export const backendAccess: Record<string, Role[]> = {
   "/api/ipv": ["admin", "dependiente"],
   "/api/sales": ["admin", "dependiente"],
   "/api/shift": ["admin", "dependiente"],
+  "/api/stockLocation": ["admin", "dependiente"],
+  "/api/paymentMethod": ["admin", "dependiente"],
 
   // * Admin ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  "/api/paymentMethod": ["admin"],
   "/api/purchase": ["admin", ],
-  "/api/stockLocation": ["admin"],
   "/api/transfer-location": ["admin"],
   "/api/user": ["admin"],
   "/api/warehouse-stock": ["admin"],

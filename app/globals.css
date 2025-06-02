@@ -119,3 +119,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Remover flechas en Chrome, Safari, Edge, Opera */
+input[type="text"][inputmode="numeric"]::-webkit-inner-spin-button,
+input[type="text"][inputmode="numeric"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remover flechas en Firefox */
+input[type="text"][inputmode="numeric"] {
+  -moz-appearance: textfield;
+}

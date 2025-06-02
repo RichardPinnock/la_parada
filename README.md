@@ -192,11 +192,6 @@ Once the server is running, visit `http://localhost:3000` to start using the app
 <!-- 
 **Por hacer
 
--Frontend de ajustes en los turnos (adjustment)
-dar salida
-
-
-
 -Frontend de los métodos de pago (paymentMethod) ---opcional
 
 ------------------------------------------------------------------
@@ -214,12 +209,7 @@ Posibles mejoras
 --Loading general
 --Escalable para LOGGING - HEADERS - RETRY (principalmente logging)
 
-
-carrito de compras modificar valor manualmente xa evitar incrementar de 1 en 1
-
 Incomodidad en los inputs para registrar valor 
 ```Richard q es eso compadre``` (declaraciones del primo cuando probo el sistema)
-
-quitar el vuelto y la cantidad ingresada cuando es por transferencia 
 
 -->
