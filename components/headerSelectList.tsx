@@ -16,9 +16,13 @@ export default function HeaderNavMenu({ role = "" }: HeaderNavMenuProps) {
         { label: "Realizar Compras", href: "/purchase" },
         { label: "Gestión de Usuarios", href: "/admin/user" },
         { label: "Gestión de Locales", href: "/admin/warehouse" },
+        { label: "Gestión de Ajustes", href: "/admin/adjustment" },
         { label: "IPV", href: "/ipv" },
       ]
-    : [{ label: "IPV", href: "/ipv" }];
+    : [
+        { label: "IPV", href: "/ipv" },
+        { label: "Ver Ajustes", href: "/admin/adjustment" },
+      ];
 
   return (
     <div className="relative group">

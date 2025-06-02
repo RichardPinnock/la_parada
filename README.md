@@ -223,4 +223,6 @@ carrito de compras modificar valor manualmente xa evitar incrementar de 1 en 1
 Incomodidad en los inputs para registrar valor 
 ```Richard q es eso compadre``` (declaraciones del primo cuando probo el sistema)
 
+quitar el vuelto y la cantidad ingresada cuando es por transferencia 
+
 -->

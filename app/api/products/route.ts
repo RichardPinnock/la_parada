@@ -27,9 +27,6 @@ export async function GET(request: Request) {
       },
     });
   }
-  console.log("user ===>>", user);
-  console.log("location ===>>", user?.stockLocations[0].stockLocation.name);
-  console.log("location ===>>", user?.stockLocations[0].stockLocation.id);
 
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
