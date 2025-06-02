@@ -209,12 +209,8 @@ loading pa los botones
 ---finalizar venta 
 ---descargar pdf
 
-me loguee con un correo q no existe y paso no entendi nada
+me loguee con un correo q no existe en BD y paso no entendi nada (me paso dos veces)
 laMuchachaTrabajaAlante@gmail.com
-
-Rutas accesibles desde el pos y protección  de rutas
---Rutas fallan cuando estas en otra seccion q no es el localHost:4000
-
 
 Posibles mejoras 
 -Implementar axios:
@@ -224,5 +220,7 @@ Posibles mejoras
 
 carrito de compras modificar valor manualmente xa evitar incrementar de 1 en 1
 
+Incomodidad en los inputs para registrar valor 
+```Richard q es eso compadre``` (declaraciones del primo cuando probo el sistema)
 
 -->
