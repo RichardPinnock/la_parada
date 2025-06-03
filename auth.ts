@@ -33,13 +33,17 @@ export const authOptions = {
           // });
         }
 
+        if(!user.isActive){
+          throw new Error("Usuario inhabilitado, por favor contacte al administrador");
+        }
+
         const isCorrectPassword = await bcrypt.compare(
           credentials.password,
           user.password
         );
 
         if (!isCorrectPassword) {
-          throw new Error("Invalid credentials");
+          throw new Error("Credenciales inválidas");
         }
 
         return user;

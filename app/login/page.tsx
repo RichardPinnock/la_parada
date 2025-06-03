@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     try {
@@ -19,7 +21,11 @@ export default function LoginPage() {
       });
 
       if (response?.error) {
-        setError("Invalid credentials");
+        if (typeof response.error === "string") {
+          setError(response.error);
+        } else {
+          setError("Credenciales inválidas");
+        }
         return;
       }
 
@@ -53,18 +59,28 @@ export default function LoginPage() {
                 placeholder="Email address"
               />
             </div>
-            <div>
+            <div className="relative">
               <label htmlFor="password" className="sr-only">
                 Password
               </label>
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
+              <div
+                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-500" />
+                )}
+              </div>
             </div>
           </div>
 
@@ -81,11 +97,11 @@ export default function LoginPage() {
             </button>
           </div>
         </form>
-        <div className="text-center">
+        {/* <div className="text-center">
           <Link href="/register" className="text-blue-600 hover:underline">
             No account? Register.
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

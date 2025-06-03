@@ -4,6 +4,7 @@ import { registerInventoryMovementFromPurchase } from "@/lib/inventory-utils";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { CreateShiftToday } from "../sales/route";
 
 export const GET = withRole(async (req: NextRequest, token) => {
   const session = await getServerSession(authOptions);
@@ -111,7 +112,13 @@ export const POST = withRole(async (req: NextRequest, token) => {
         { status: 400 }
       );
     }
-
+    const shift = await CreateShiftToday(userId, locationId)
+    if (!shift) {
+      return NextResponse.json(
+        { error: "No se pudo crear el turno, intente otra vez" },
+        { status: 500 }
+      );
+    }
     const newPurchase = await prisma.purchase.create({
       data: {
         userId,

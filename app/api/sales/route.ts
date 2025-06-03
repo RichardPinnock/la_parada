@@ -169,8 +169,8 @@ export const POST = withRole(async (req, token) =>{
                         transferCode: transferCode,
                     }
                 })
-                if (sales.length > 0) {
-                    throw new Error('Ya existe una venta con este código de transferencia');
+                if (sales.length > 0 && transferCode) {
+                    throw new Error('Ya existe una venta con este código de transferencia ' + transferCode);
                 }
 
                 // 3. Crear la venta con sus items
@@ -219,20 +219,23 @@ export const POST = withRole(async (req, token) =>{
 
                 return newSale;
             }, {
-                timeout: 10000, // 10 segundos en lugar de 5
-                maxWait: 8000   // tiempo máximo de espera para iniciar la transacción
+                timeout: 15000, // 10 segundos en lugar de 5
+                maxWait: 10000   // tiempo máximo de espera para iniciar la transacción
             }
         );
         
         return NextResponse.json(sale);
     } catch (error) {
         console.log("error al crear la venta", error);
+        if (error instanceof Error) {
+            return NextResponse.json({ error: error.message }, { status: 400 });
+        }
         return NextResponse.json({ error: "Error al crear la venta" }, { status: 500 });
     }
 })
 
 
-async function CreateShiftToday(userId: string) {
+export async function CreateShiftToday(userId: string, stockLocationId?: string) {
     try {
         const user = await prisma.user.findUnique({
             where: { 
@@ -257,7 +260,24 @@ async function CreateShiftToday(userId: string) {
             throw new Error("El usuario no tiene ubicaciones de stock asignadas");
         }
 
-        const stockLocation = user.stockLocations[0]; // Usar la primera ubicación de stock del usuario
+        let stockLocation = user.stockLocations[0]; // Usar la primera ubicación de stock del usuario
+
+        if (stockLocationId && stockLocationId !== '') {
+            // Si se proporciona un stockLocationId, buscar la ubicación específica
+            const foundLocation = await prisma.stockLocation.findUnique({
+                where: { id: stockLocationId },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            })
+            if (!foundLocation) {
+                throw new Error("Ubicación de stock no encontrada para el usuario");
+            }
+            stockLocation = { stockLocationId: foundLocation.id };
+        }
+
+
         // buscar si ya existe un turno para el dia de hoy
         const today = new Date();
         const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());

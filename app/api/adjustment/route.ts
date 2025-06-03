@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession, User } from "next-auth";
 
 import prisma from "@/lib/prisma";
 import { withRole } from "@/lib/guardRole";
 import { registerInventoryAdjustment } from "@/lib/inventory-utils";
 import { authOptions } from "@/auth";
+import { CreateShiftToday } from "../sales/route";
 
 // Listar todos los inventoryAdjustments
 export const GET = withRole(async (req: Request, token) => {
@@ -15,7 +16,7 @@ export const GET = withRole(async (req: Request, token) => {
   const offset = (page - 1) * limit;
   const session = await getServerSession(authOptions);
   // console.log('session ===>>', session);
-  let user = null;
+  let user: any = null;
   if (session?.user?.id) {
     user = await prisma.user.findUnique({
       where: {
@@ -194,6 +195,14 @@ export const POST = withRole(async (req: Request, token) => {
         {
           error: `La cantidad a ajustar no puede ser mayor al stock disponible (${product.warehouseStocks[0].quantity} unidades)`,
         },
+        { status: 400 }
+      );
+    }
+
+    const shift = await CreateShiftToday(userId, locationId);
+    if (!shift) {
+      return NextResponse.json(
+        { error: "No se encontró un turno activo en la ubicación" + location.name },
         { status: 400 }
       );
     }
