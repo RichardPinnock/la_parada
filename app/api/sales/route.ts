@@ -232,7 +232,7 @@ export const POST = withRole(async (req, token) =>{
 })
 
 
-async function CreateShiftToday(userId: string) {
+export async function CreateShiftToday(userId: string, stockLocationId?: string) {
     try {
         const user = await prisma.user.findUnique({
             where: { 
@@ -257,7 +257,24 @@ async function CreateShiftToday(userId: string) {
             throw new Error("El usuario no tiene ubicaciones de stock asignadas");
         }
 
-        const stockLocation = user.stockLocations[0]; // Usar la primera ubicación de stock del usuario
+        let stockLocation = user.stockLocations[0]; // Usar la primera ubicación de stock del usuario
+
+        if (stockLocationId && stockLocationId !== '') {
+            // Si se proporciona un stockLocationId, buscar la ubicación específica
+            const foundLocation = await prisma.stockLocation.findUnique({
+                where: { id: stockLocationId },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            })
+            if (!foundLocation) {
+                throw new Error("Ubicación de stock no encontrada para el usuario");
+            }
+            stockLocation = { stockLocationId: foundLocation.id };
+        }
+
+
         // buscar si ya existe un turno para el dia de hoy
         const today = new Date();
         const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());

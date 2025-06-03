@@ -2,6 +2,7 @@ import { registerInventoryMovementForTransfer } from "@/lib/inventory-utils"
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma";
 import { withRole } from "@/lib/guardRole";
+import { CreateShiftToday } from "../sales/route";
 
 
 export const POST = withRole(async (req, token) => {
@@ -47,6 +48,15 @@ export const POST = withRole(async (req, token) => {
     const fromLocationQuantity = fromLocationStock.warehouseStocks[0].quantity
     if (fromLocationQuantity < quantity) {
       return NextResponse.json({ error: `Stock insuficiente en la ubicación de origen: solo hay ${fromLocationQuantity} unidades disponibles.` }, { status: 400 })
+    }
+
+    const shiftFromLocation = await CreateShiftToday(userId, fromLocationId)
+    if (!shiftFromLocation) {
+      return NextResponse.json({ error: 'No se encontró un turno activo en la ubicación de origen' }, { status: 400 })
+    }
+    const shiftToLocation = await CreateShiftToday(userId, toLocationId)
+    if (!shiftToLocation) {
+      return NextResponse.json({ error: 'No se encontró un turno activo en la ubicación de destino' }, { status: 400 })
     }
 
     const transferId = await registerInventoryMovementForTransfer({

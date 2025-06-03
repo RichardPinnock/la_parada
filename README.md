@@ -214,12 +214,6 @@ Posibles mejoras
 Incomodidad en los inputs para registrar valor 
 ```Richard q es eso compadre``` (declaraciones del primo cuando probo el sistema)
 
-Error al calcular el ipv de la paladar la mayonesa retorna mal
-ajustar la creación de turno 
-Crear turno al:
-Vender - OK
-Comprar - FALTA
-Transferir entre locales - FALTA
-Registrar merma o ajuste - FALTA
+Error al calcular el ipv de la paladar
 
 -->

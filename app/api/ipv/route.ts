@@ -10,6 +10,7 @@ export const GET = withRole(async (req, token) => {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
+  const { searchParams } = new URL(req.url);
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -18,17 +19,17 @@ export const GET = withRole(async (req, token) => {
     },
   });
 
-  const stockLocationId = user?.stockLocations[0]?.stockLocation.id;
+  let stockLocationId = user?.stockLocations[0]?.stockLocation.id;
   if (!stockLocationId) {
     return NextResponse.json(
-      { error: "Missing stockLocationId" },
+      { error: "No se encontró local" },
       { status: 400 }
     );
   }
 
-  const { searchParams } = new URL(req.url);
+  const locationId = searchParams.get("locationId");
   const dateParam = searchParams.get("date");
-  const date = dateParam ? new Date(`${dateParam}T00:00:00`) : new Date();
+  const date = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
   const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const end = new Date(
     date.getFullYear(),
@@ -40,7 +41,25 @@ export const GET = withRole(async (req, token) => {
     999
   );
 
-  const [firstShiftToday, latestShiftToday] = await Promise.all([
+  if (locationId) {
+    const location = await prisma.stockLocation.findUnique({
+      where: { id: locationId },
+    });
+    if (!location) {
+      return NextResponse.json(
+        { error: "Ubicación por parámetro no encontrada" },
+        { status: 404 }
+      );
+    } else {
+      stockLocationId = location.id;
+    }
+  }
+  const stockLocation = await prisma.stockLocation.findUnique({
+    where: { id: stockLocationId },
+  })
+  
+
+  const [firstShiftToday, latestShiftToday, shifts] = await Promise.all([
     prisma.shift.findFirst({
       where: { stockLocationId, createdAt: { gte: start, lte: end } },
       orderBy: { createdAt: "asc" },
@@ -53,11 +72,17 @@ export const GET = withRole(async (req, token) => {
       },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.shift.findMany({
+      where: { stockLocationId, startTime: { gte: start, lte: end } },
+      include: { user: true },
+    }),
   ]);
+
+  console.log('shifts', shifts);
+  
   
   // Luego, ejecutar las consultas que dependen de ellos en paralelo
   const [
-    shifts,
     productsInLocation,
     saleItems,
     incomingItems, //entradas
@@ -67,10 +92,6 @@ export const GET = withRole(async (req, token) => {
     financialSummary, // ganancias
     buyingTransactions, //compras
   ] = await Promise.all([
-    prisma.shift.findMany({
-      where: { stockLocationId, startTime: { gte: start, lte: end } },
-      include: { user: true },
-    }),
     prisma.warehouseStock.findMany({
       where: { locationId: stockLocationId },
       include: { product: true },
@@ -123,12 +144,13 @@ export const GET = withRole(async (req, token) => {
     }),
     calculateProfit(
       firstShiftToday?.createdAt ?? start,
-      latestShiftToday?.endTime ?? end
+      latestShiftToday?.endTime ?? end,
+      shifts.map((s) => s.id)
     ),
     prisma.purchaseItem.findMany({
       where: {
         // Filtra por las ubicaciones incluidas en el array
-        locationId: { in: user?.stockLocations.map((sl) => sl.stockLocation.id) },
+        locationId: { in: [stockLocationId] },
         // Filtra por la fecha de la compra relacionada
         purchase: {
           createdAt: {
@@ -155,7 +177,15 @@ export const GET = withRole(async (req, token) => {
     .filter((s) => s.sale.paymentMethod.name === "transferencia")
     .reduce((acc, s) => acc + s.quantity * s.product.salePrice, 0);
 
+
+    console.log('length productsInLocation', productsInLocation.length);
+    console.log('locationId', stockLocationId);
+    
+
   const result = productsInLocation.map(({ product }) => {
+    console.log('name product', product.name);
+    console.log('id product', product.id);
+    
     const PC = product.purchasePrice;
     const PV = product.salePrice;
     const I = snapshots
@@ -190,19 +220,34 @@ export const GET = withRole(async (req, token) => {
 
   return NextResponse.json({
     date: start.toISOString(),
-    shiftAuthors: shifts.map((s) => s.user.name),
+    shiftAuthors: shifts
+      .filter((s) => s.user.role === "dependiente")
+      .map((s) => s.user.name),
+    shiftManagers: shifts
+      .filter((s) => s.user.role === "admin")
+      .map((s) => s.user.name),
     products: result,
     total: { totalCashAmount, totalTransferAmount },
+    stockLocation,
   });
 })
 
-async function calculateProfit(startDate: Date, endDate: Date) {
+async function calculateProfit(startDate: Date, endDate: Date, shiftIds: string[]) {
   const sales = await prisma.sale.findMany({
-    where: { createdAt: { gte: startDate, lte: endDate } },
+    where: { 
+      createdAt: { gte: startDate, lte: endDate },
+      shiftId: { in: shiftIds.length > 0 ? shiftIds : undefined },
+    },
     include: {
       items: { include: { product: true, costAllocations: true } },
     },
   });
+  console.log('startDate', startDate);
+  console.log('endDate', endDate);
+  console.log('shiftIds', shiftIds);
+  
+  console.log('sales', sales);
+  
 
   const profitsByProduct = new Map<number, any>();
 
@@ -228,16 +273,17 @@ async function calculateProfit(startDate: Date, endDate: Date) {
         0
       );
 
-      stats.quantitySold += item.quantity;
-      stats.revenue += itemRevenue;
-      stats.realCost += itemCost;
-      stats.profit += itemRevenue - itemCost;
-      stats.averagePrice = stats.revenue / stats.quantitySold;
-      stats.averageCost = stats.realCost / stats.quantitySold;
+      stats.quantitySold += item.quantity; // Incrementa la cantidad vendida
+      stats.revenue += itemRevenue; // Incrementa los ingresos totales
+      stats.realCost += itemCost; // Incrementa el costo real total
+      stats.profit += itemRevenue - itemCost; // Calcula la ganancia total
+      stats.averagePrice = stats.revenue / stats.quantitySold; // Calcula el precio promedio
+      stats.averageCost = stats.realCost / stats.quantitySold; // Calcula el costo promedio
     }
   }
 
   const results = Array.from(profitsByProduct.values());
+  console.log("Profit results:", results);
   return {
     products: results,
     summary: results.reduce(

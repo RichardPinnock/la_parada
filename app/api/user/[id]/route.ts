@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
+
+import prisma from "@/lib/prisma";
 import { withRole } from "@/lib/guardRole";
+import { authOptions } from "@/auth";
 
 export const GET = withRole(async (req: NextRequest, token) => {
   try {
@@ -9,13 +12,18 @@ export const GET = withRole(async (req: NextRequest, token) => {
 
     const id = url.pathname.split("/").pop();
     console.log("id ==>", id);
+    const session = await getServerSession(authOptions);
 
     if (!id) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
+    const userId = id === "1" ? session?.user?.id : id;
+    if (!userId) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
 
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
       include: {
         stockLocations: {
           select: {
