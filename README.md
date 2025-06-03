@@ -211,9 +211,10 @@ Posibles mejoras
 --Loading general
 --Escalable para LOGGING - HEADERS - RETRY (principalmente logging)
 
-Incomodidad en los inputs para registrar valor 
-```Richard q es eso compadre``` (declaraciones del primo cuando probo el sistema)
 
-Error al calcular el ipv de la paladar
+Richard !!!!!!!!!!!!!!!!!!
+arregla el front de usuarios (q no se me acomodan los iconos)
+los numero con los inputs
+
 
 -->
