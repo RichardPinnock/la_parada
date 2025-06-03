@@ -7,7 +7,9 @@ export { handler as GET, handler as POST };
 
 declare module "next-auth" {
   interface Session {
-    user: { id: string; name: string; email: string; role: string };
+    user: {
+      image: string; id: string; name: string; email: string; role: string 
+};
     // user: { id: string };
   }
 }

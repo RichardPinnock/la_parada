@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <Providers>
-          <div className="min-h-screen flex flex-col">
+          <div className="flex flex-col">
             <Header />
             <main className="flex-1">{children}</main>
             <Toaster richColors position="top-right" />
