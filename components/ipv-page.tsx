@@ -190,8 +190,7 @@ export default function IPVPage() {
           </div>
           {userLocation.length > 1 ? (
             <div className="flex flex-col">
-              {data?.stockLocation.name}
-              <Label htmlFor="location">Localidad</Label>
+              <Label htmlFor="location">Local</Label>
               <select
                 id="location"
                 value={selectedLocation?.id || ""}
