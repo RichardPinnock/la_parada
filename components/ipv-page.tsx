@@ -99,6 +99,9 @@ export default function IPVPage() {
       console.log("Usuario no autenticado");
       return;
     }
+    if(session?.user?.role == "dependiente"){
+      return
+    }
 
     try {
       const response = await fetch(`/api/user/${userId}`);
