@@ -68,6 +68,8 @@ export default function IPVPage() {
       const params = new URLSearchParams();
       if (date) {
         const formattedDate = date.split("T")[0];
+        console.log('Formatted Date:', formattedDate);
+        
         params.append("date", formattedDate);
       }
       if (locationId) {
@@ -130,6 +132,9 @@ export default function IPVPage() {
   }, []);
 
   const handleDateChange = () => {
+    console.log('Selected Date:', selectedDate);
+    console.log('Selected Location:', selectedLocation);
+    
     fetchIPVData(selectedDate, selectedLocation?.id || "");
   };
 

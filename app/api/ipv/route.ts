@@ -29,17 +29,23 @@ export const GET = withRole(async (req, token) => {
 
   const locationId = searchParams.get("locationId");
   const dateParam = searchParams.get("date");
-  const date = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const end = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    23,
-    59,
-    59,
-    999
-  );
+
+  const date = dateParam ? new Date(`${dateParam}T05:00:00Z`) : new Date();
+  // Usar los valores UTC para construir start y end correctamente
+  const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
+  const end = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
+
+  console.log("----------------------------------------------------------------------------------");
+  console.log("----------------------------------------------------------------------------------");
+  console.log("----------------------------------------------------------------------------------");
+  console.log("dateParam", dateParam);
+  console.log("date", date);
+  console.log("start", start);
+  console.log("end", end);
+  console.log("locationId", locationId);
+  console.log("----------------------------------------------------------------------------------");
+  console.log("----------------------------------------------------------------------------------");
+  console.log("----------------------------------------------------------------------------------");
 
   if (locationId) {
     const location = await prisma.stockLocation.findUnique({
@@ -58,26 +64,53 @@ export const GET = withRole(async (req, token) => {
     where: { id: stockLocationId },
   });
 
-  const [firstShiftToday, latestShiftToday, shifts] = await Promise.all([
-    prisma.shift.findFirst({
-      where: { stockLocationId, createdAt: { gte: start, lte: end } },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.shift.findFirst({
-      where: {
-        stockLocationId,
-        createdAt: { gte: start, lte: end },
-        endTime: { not: null },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.shift.findMany({
-      where: { stockLocationId, startTime: { gte: start, lte: end } },
-      include: { user: true },
-    }),
-  ]);
+  const [firstShiftToday, latestShiftToday, shifts] =
+    await Promise.all([
+      prisma.shift.findFirst({
+        where: { stockLocationId, createdAt: { gte: start, lte: end } },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.shift.findFirst({
+        where: {
+          stockLocationId,
+          createdAt: { gte: start, lte: end },
+          endTime: { not: null },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.shift.findMany({
+        where: {
+          stockLocationId,
+          startTime: { gte: start, lte: end },
+          OR: [
+            { endTime: null },
+            { endTime: { lte: end } },
+          ],
+        },
+        include: { user: true },
+      })
+    ]);
+  const salesOfDay = await prisma.sale.findMany({
+    where: {
+      shiftId: { in: shifts.map((s) => s.id) },
+      createdAt: { gte: start, lte: end },
+    },
+    select: { id: true },
+  });
+  const purchasesOfDay = await prisma.purchase.findMany({
+    where: {
+      createdAt: { gte: start, lte: end },
+    },
+    select: { id: true },
+  })
+  const purchasesOfDayIds = purchasesOfDay.map((purchase) => purchase.id);
+  console.log('purchasesOfDayIds', purchasesOfDayIds);
 
-  console.log("shifts", shifts);
+  const saleIds = salesOfDay.map((sale) => sale.id);
+  console.log('saleIds', saleIds);
+  
+
+  // console.log("shifts get", shifts);
 
   // Luego, ejecutar las consultas que dependen de ellos en paralelo
   const [
@@ -97,7 +130,7 @@ export const GET = withRole(async (req, token) => {
     prisma.saleItem.findMany({
       where: {
         locationId: stockLocationId,
-        sale: { createdAt: { gte: start, lte: end } },
+        saleId: { in: saleIds }
       },
       include: {
         product: true,
@@ -150,12 +183,7 @@ export const GET = withRole(async (req, token) => {
         // Filtra por las ubicaciones incluidas en el array
         locationId: { in: [stockLocationId] },
         // Filtra por la fecha de la compra relacionada
-        purchase: {
-          createdAt: {
-            gte: start,
-            lte: end,
-          },
-        },
+        purchaseId: { in: purchasesOfDayIds }
       },
       include: {
         product: true,
@@ -167,6 +195,10 @@ export const GET = withRole(async (req, token) => {
     }),
   ]);
 
+  console.log("salesItems", saleItems);
+  // console.log('buyingTransactions', buyingTransactions);
+  
+
   const totalCashAmount = saleItems
     .filter((s) => s.sale.paymentMethod.name === "efectivo")
     .reduce((acc, s) => acc + s.quantity * s.product.salePrice, 0);
@@ -175,12 +207,16 @@ export const GET = withRole(async (req, token) => {
     .filter((s) => s.sale.paymentMethod.name === "transferencia")
     .reduce((acc, s) => acc + s.quantity * s.product.salePrice, 0);
 
-  console.log("length productsInLocation", productsInLocation.length);
-  console.log("locationId", stockLocationId);
+  // console.log("length productsInLocation", productsInLocation.length);
+  // console.log("locationId", stockLocationId);
 
   const result = productsInLocation.map(({ product }) => {
     console.log("name product", product.name);
     console.log("id product", product.id);
+    console.log("incomingItems for product", product.id, incomingItems.filter(m => m.productId === product.id));
+    console.log("buyingTransactions for product", product.id, buyingTransactions.filter(c => c.productId === product.id));
+    console.log('\n');
+    
     // Para cada producto, extraer los unitPrice de las ventas realizadas en el día
     const salePrices = saleItems
       .filter((s) => s.productId === product.id)
@@ -213,7 +249,7 @@ export const GET = withRole(async (req, token) => {
       .reduce((acc, m) => acc + -m.quantity, 0);
     M += S;
     const V = saleItems
-      .filter((s) => s.productId === product.id)
+      .filter((s) => Number(s.productId) === Number(product.id))
       .reduce((acc, s) => acc + s.quantity, 0);
     const R = I + E - V - M;
     const T = V * PV;
@@ -225,7 +261,7 @@ export const GET = withRole(async (req, token) => {
   });
 
   return NextResponse.json({
-    date: start.toISOString(),
+    date: date.toISOString(),
     shiftAuthors: shifts
       .filter((s) => s.user.role === "dependiente")
       .map((s) => s.user.name),
@@ -252,11 +288,11 @@ async function calculateProfit(
       items: { include: { product: true, costAllocations: true } },
     },
   });
-  console.log("startDate", startDate);
-  console.log("endDate", endDate);
-  console.log("shiftIds", shiftIds);
+  // console.log("startDate", startDate);
+  // console.log("endDate", endDate);
+  // console.log("shiftIds calculate profit", shiftIds);
 
-  console.log("sales", sales);
+  // console.log("sales", sales);
 
   const profitsByProduct = new Map<number, any>();
 
@@ -292,7 +328,7 @@ async function calculateProfit(
   }
 
   const results = Array.from(profitsByProduct.values());
-  console.log("Profit results:", results);
+  // console.log("Profit results:", results);
   return {
     products: results,
     summary: results.reduce(
