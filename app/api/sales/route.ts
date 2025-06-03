@@ -170,7 +170,7 @@ export const POST = withRole(async (req, token) =>{
                     }
                 })
                 if (sales.length > 0 && transferCode) {
-                    throw new Error('Ya existe una venta con este código de transferencia');
+                    throw new Error('Ya existe una venta con este código de transferencia ' + transferCode);
                 }
 
                 // 3. Crear la venta con sus items
@@ -227,6 +227,9 @@ export const POST = withRole(async (req, token) =>{
         return NextResponse.json(sale);
     } catch (error) {
         console.log("error al crear la venta", error);
+        if (error instanceof Error) {
+            return NextResponse.json({ error: error.message }, { status: 400 });
+        }
         return NextResponse.json({ error: "Error al crear la venta" }, { status: 500 });
     }
 })
