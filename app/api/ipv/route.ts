@@ -56,8 +56,7 @@ export const GET = withRole(async (req, token) => {
   }
   const stockLocation = await prisma.stockLocation.findUnique({
     where: { id: stockLocationId },
-  })
-  
+  });
 
   const [firstShiftToday, latestShiftToday, shifts] = await Promise.all([
     prisma.shift.findFirst({
@@ -78,9 +77,8 @@ export const GET = withRole(async (req, token) => {
     }),
   ]);
 
-  console.log('shifts', shifts);
-  
-  
+  console.log("shifts", shifts);
+
   // Luego, ejecutar las consultas que dependen de ellos en paralelo
   const [
     productsInLocation,
@@ -166,7 +164,7 @@ export const GET = withRole(async (req, token) => {
         // incluye si necesitas las asignaciones de costos
         costAllocations: true,
       },
-    })
+    }),
   ]);
 
   const totalCashAmount = saleItems
@@ -177,17 +175,25 @@ export const GET = withRole(async (req, token) => {
     .filter((s) => s.sale.paymentMethod.name === "transferencia")
     .reduce((acc, s) => acc + s.quantity * s.product.salePrice, 0);
 
-
-    console.log('length productsInLocation', productsInLocation.length);
-    console.log('locationId', stockLocationId);
-    
+  console.log("length productsInLocation", productsInLocation.length);
+  console.log("locationId", stockLocationId);
 
   const result = productsInLocation.map(({ product }) => {
-    console.log('name product', product.name);
-    console.log('id product', product.id);
-    
+    console.log("name product", product.name);
+    console.log("id product", product.id);
+    // Para cada producto, extraer los unitPrice de las ventas realizadas en el día
+    const salePrices = saleItems
+      .filter((s) => s.productId === product.id)
+      .map((s) => s.unitPrice);
+
+    // Si hay ventas, usamos el promedio; si no, como fallback se usa el precio fijo del producto
+    const PV =
+      salePrices.length > 0
+        ? salePrices.reduce((sum, price) => sum + price, 0) / salePrices.length
+        : product.salePrice;
+
     const PC = product.purchasePrice;
-    const PV = product.salePrice;
+    // const PV = product.salePrice; //! aquí se tomo el precio de venta del producto no de las ventas
     const I = snapshots
       .filter((s) => s.productId === product.id)
       .reduce((acc, s) => acc + s.quantity, 0);
@@ -211,9 +217,9 @@ export const GET = withRole(async (req, token) => {
       .reduce((acc, s) => acc + s.quantity, 0);
     const R = I + E - V - M;
     const T = V * PV;
-    const G = financialSummary.products.find(
-      (g) => g.productId === product.id
-    )?.profit ?? 0;
+    const G =
+      financialSummary.products.find((g) => g.productId === product.id)
+        ?.profit ?? 0;
 
     return { nombre: product.name, PC, PV, I, E, M, R, V, T, G };
   });
@@ -230,11 +236,15 @@ export const GET = withRole(async (req, token) => {
     total: { totalCashAmount, totalTransferAmount },
     stockLocation,
   });
-})
+});
 
-async function calculateProfit(startDate: Date, endDate: Date, shiftIds: string[]) {
+async function calculateProfit(
+  startDate: Date,
+  endDate: Date,
+  shiftIds: string[]
+) {
   const sales = await prisma.sale.findMany({
-    where: { 
+    where: {
       createdAt: { gte: startDate, lte: endDate },
       shiftId: { in: shiftIds.length > 0 ? shiftIds : undefined },
     },
@@ -242,12 +252,11 @@ async function calculateProfit(startDate: Date, endDate: Date, shiftIds: string[
       items: { include: { product: true, costAllocations: true } },
     },
   });
-  console.log('startDate', startDate);
-  console.log('endDate', endDate);
-  console.log('shiftIds', shiftIds);
-  
-  console.log('sales', sales);
-  
+  console.log("startDate", startDate);
+  console.log("endDate", endDate);
+  console.log("shiftIds", shiftIds);
+
+  console.log("sales", sales);
 
   const profitsByProduct = new Map<number, any>();
 
