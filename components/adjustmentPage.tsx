@@ -73,6 +73,7 @@ export default function AdjustmentsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
   const debouncedSearch = useDebounce(search, 500);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -84,20 +85,28 @@ export default function AdjustmentsPage() {
   // Función para traer ajustes desde /api/adjustment
   const fetchAdjustments = async () => {
     setLoading(true);
+    setError(null); // Limpiar errores previos
+
     try {
       const response = await fetch(
         `/api/adjustment?page=${page}&limit=5&search=${encodeURIComponent(
           search
         )}`
       );
+
       if (!response.ok) {
-        setAdjustments([]);
-        console.log('response ==>>', response);
         if (response.status === 404) {
-            toast.error("No se encontraron ajustes");
-            return;
+          // Si es 404, no hay más datos - detener paginación
+          setHasMore(false);
+          setError("No se encontraron ajustes");
+
+          // Si es la primera página, limpiar ajustes
+          if (page === 1) {
+            setAdjustments([]);
+          }
+          return;
         }
-        throw new Error("Error al obtener los ajustes");
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const res = await response.json();
@@ -111,11 +120,26 @@ export default function AdjustmentsPage() {
         setAdjustments((prev) => [...prev, ...newAdjustments]);
       }
 
-      setHasMore(newAdjustments.length >= 5);
+      // Verificar si hay más datos
+      const hasMoreData = newAdjustments.length >= 5;
+      setHasMore(hasMoreData);
+
+      // Si no hay datos en la primera página, mostrar mensaje
+      if (page === 1 && newAdjustments.length === 0) {
+        setError("No se encontraron ajustes");
+      }
     } catch (error) {
-      setAdjustments([]);
-      toast.error("Error al cargar los ajustes");
-      console.log(error);
+      console.error("Error fetching adjustments:", error);
+      setHasMore(false); // Detener paginación en caso de error
+
+      if (page === 1) {
+        setAdjustments([]);
+        setError("Error al cargar los ajustes");
+        toast.error("Error al cargar los ajustes");
+      } else {
+        // Si hay error en páginas posteriores, solo mostrar toast
+        toast.error("Error al cargar más ajustes");
+      }
     } finally {
       setLoading(false);
     }
@@ -123,25 +147,45 @@ export default function AdjustmentsPage() {
 
   // Llamar a fetchAdjustments siempre que cambie la página o el debounced search
   useEffect(() => {
+    // Reset states cuando cambia la búsqueda
+    if (page === 1) {
+      setHasMore(true);
+      setError(null);
+    }
     fetchAdjustments();
   }, [page, debouncedSearch]);
 
+  // Reset página cuando cambia la búsqueda
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    setError(null);
+  }, [debouncedSearch]);
+
   // useEffect para paginado infinito usando IntersectionObserver
   useEffect(() => {
-    if (!hasMore) return;
+    // No observar si hay error, no hay más datos, o está cargando
+    if (!hasMore || error || loading) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loading && hasMore && !error) {
           setPage((prev) => prev + 1);
         }
       },
       { root: null, threshold: 1.0 }
     );
-    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
     return () => {
-      if (loadMoreRef.current) observer.unobserve(loadMoreRef.current);
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
     };
-  }, [loading, hasMore]);
+  }, [loading, hasMore, error]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -156,7 +200,7 @@ export default function AdjustmentsPage() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setPage(1); // Reinicia la página al cambiar la busqueda
+              // El reset de página se maneja en el useEffect
             }}
             className="pl-10"
           />
@@ -172,9 +216,24 @@ export default function AdjustmentsPage() {
           {loading && page === 1 ? (
             <div className="flex justify-center py-8">
               <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <span className="ml-2">Cargando ajustes...</span>
             </div>
-          ) : adjustments.length === 0 ? (
-            <p className="text-gray-600">No se encontraron ajustes.</p>
+          ) : error && adjustments.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">{error}</p>
+              <Button
+                onClick={() => {
+                  setPage(1);
+                  setError(null);
+                  setHasMore(true);
+                  fetchAdjustments();
+                }}
+                className="mt-4"
+                variant="outline"
+              >
+                Reintentar
+              </Button>
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -217,11 +276,21 @@ export default function AdjustmentsPage() {
         </CardContent>
       </Card>
 
-      {/* Ref para paginado infinito */}
-      <div ref={loadMoreRef} className="h-4" />
+      {/* Ref para paginado infinito - solo mostrar si hay más datos */}
+      {hasMore && !error && <div ref={loadMoreRef} className="h-4" />}
+
+      {/* Indicador de carga para páginas adicionales */}
       {loading && page > 1 && (
         <div className="flex justify-center py-4">
-          <p>Cargando más...</p>
+          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2" />
+          <span>Cargando más...</span>
+        </div>
+      )}
+
+      {/* Mensaje cuando no hay más datos */}
+      {!hasMore && adjustments.length > 0 && !loading && (
+        <div className="text-center py-4">
+          <p className="text-gray-500">No hay más ajustes para mostrar</p>
         </div>
       )}
 

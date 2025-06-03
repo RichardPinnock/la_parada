@@ -53,11 +53,12 @@ export default function POSSystem() {
   const [inputQuantities, setInputQuantities] = useState<
     Record<number, string>
   >({});
+  const [sendSale, setSendSale] = useState<boolean>(false);
+  const [saleError, setSaleError] = useState<string | null>(null); // Nuevo estado para errores
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("");
   const [transferCode, setTransferCode] = useState<string>("");
-  const [sendSale, setSendSale] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProducts();
@@ -120,14 +121,15 @@ export default function POSSystem() {
 
   // Agregar producto al carrito
   const agregarAlCarrito = (producto: Product) => {
-    if(role != "dependiente") {
-      if(role == "admin"){
-        toast.error("Los administradores no pueden realizar ventas, por favor, inicie sesión con un usuario dependiente");
+    if (role != "dependiente") {
+      if (role == "admin") {
+        toast.error(
+          "Los administradores no pueden realizar ventas, por favor, inicie sesión con un usuario dependiente"
+        );
         return;
       }
       toast.error("No tienes permiso para agregar productos al carrito");
       return;
-
     }
     setCarrito((prevCarrito) => {
       const itemExistente = prevCarrito.find((item) => {
@@ -196,6 +198,8 @@ export default function POSSystem() {
   const finalizeSale = async () => {
     console.log("Finalizando venta...");
     setSendSale(true);
+    setSaleError(null); // Limpiar errores previos
+
     if (
       carrito.length > 0 &&
       Number.parseFloat(cantidadPagada) >= total &&
@@ -218,44 +222,52 @@ export default function POSSystem() {
       };
       console.log("enviando datos de la venta:", saleData);
 
-      await fetch("/api/sales", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(saleData),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.error) {
-            toast.error("Error al registrar la venta: " + data.error);
-            console.log("Error al crear la venta:", data.error);
-            setSheetOpen(false);
-            setSendSale(false);
-          } else {
-            console.log("Venta creada exitosamente:", data);
-            toast.success("Venta registrada exitosamente");
-            limpiarCarrito();
-            setSheetOpen(false);
-            setSendSale(false);
-            fetchProducts();
-          }
-        })
-        .catch((error) => {
-          toast.error("Error al procesar la venta: " + error.message);
-          setSheetOpen(false);
-          setSendSale(false);
-          console.log("Error al procesar la venta:", error);
+      try {
+        const response = await fetch("/api/sales", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(saleData),
         });
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          // Manejar errores de la API
+          const errorMessage =
+            data.error || `Error ${response.status}: ${response.statusText}`;
+          setSaleError(errorMessage);
+          toast.error("Error al registrar la venta: " + errorMessage);
+          console.log("Error al crear la venta:", errorMessage);
+        } else {
+          // Venta exitosa
+          console.log("Venta creada exitosamente:", data);
+          toast.success("Venta registrada exitosamente");
+          limpiarCarrito();
+          setSheetOpen(false);
+          fetchProducts();
+          setSelectedPaymentMethod(""); // Reset payment method
+          setTransferCode(""); // Reset transfer code
+        }
+      } catch (error) {
+        // Manejar errores de red o parsing
+        const errorMessage =
+          error instanceof Error ? error.message : "Error de conexión";
+        setSaleError(errorMessage);
+        toast.error("Error al procesar la venta: " + errorMessage);
+        console.log("Error al procesar la venta:", error);
+      }
     } else {
-      // Optionally, notify the user that the sale cannot be processed.
+      // Validaciones fallidas
+      setSaleError("Debe completar todos los campos para finalizar la venta.");
       toast.error("Debe completar todos los campos para finalizar la venta.");
-      setSheetOpen(false);
-      setSendSale(false);
       console.log(
         "No se puede finalizar la venta: carrito vacío o monto insuficiente o usuario no logueado."
       );
     }
+
+    setSendSale(false);
   };
 
   return (
@@ -417,7 +429,7 @@ export default function POSSystem() {
                     )}
                   </ScrollArea>
 
-                  <div className="mt-4 space-y-4">
+                  <div className="mt-2 space-y-4">
                     <Separator />
                     <div className="flex justify-between text-lg font-medium">
                       <span>Total a pagar:</span>
@@ -448,7 +460,6 @@ export default function POSSystem() {
                       </Select>
                     </div>
 
-                    {/* Método de pago , recoger un input con el código si es por transferencia  */}
                     {selectedPaymentMethod === "transferencia" && (
                       <div className="space-y-2">
                         <label
@@ -521,36 +532,74 @@ export default function POSSystem() {
                         </div>
                       )}
 
-                    <div className="flex gap-2">
-                      <Button
-                        className="flex-1"
-                        onClick={() => {
-                          finalizeSale();
-                        }}
-                        disabled={
-                          carrito.length === 0 ||
-                          Number.parseFloat(cantidadPagada) < total ||
-                          Number.parseFloat(cantidadPagada) <= 0 ||
-                          cantidadPagada === "" ||
-                          username === "Invitado" ||
-                          selectedPaymentMethod === "" ||
-                          (selectedPaymentMethod === "transferencia" &&
-                            transferCode === "") ||
-                          sendSale ||
-                          invalidQuantity ||
-                          role == "admin"
-                        }
-                      >
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        Finalizar Venta
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={limpiarCarrito}
-                        disabled={carrito.length === 0}
-                      >
-                        Cancelar
-                      </Button>
+                    <div className="mt-2 space-y-4">
+                      {saleError && (
+                        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
+                              <X className="w-3 h-3 text-white" />
+                            </div>
+                            <p className="text-sm text-destructive font-medium">
+                              Error al procesar venta
+                            </p>
+                          </div>
+                          <p className="text-xs text-destructive/80 mt-1 ml-6">
+                            {saleError}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSaleError(null)}
+                            className="mt-2 h-6 px-2 text-xs text-destructive hover:text-destructive"
+                          >
+                            Cerrar
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button
+                          className="flex-1"
+                          onClick={finalizeSale}
+                          disabled={
+                            carrito.length === 0 ||
+                            Number.parseFloat(cantidadPagada) < total ||
+                            Number.parseFloat(cantidadPagada) <= 0 ||
+                            cantidadPagada === "" ||
+                            username === "Invitado" ||
+                            selectedPaymentMethod === "" ||
+                            (selectedPaymentMethod === "transferencia" &&
+                              transferCode === "") ||
+                            sendSale ||
+                            invalidQuantity ||
+                            role == "admin"
+                          }
+                        >
+                          {sendSale ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                              Procesando...
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="mr-2 h-4 w-4" />
+                              Finalizar Venta
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            limpiarCarrito();
+                            setSaleError(null); // Limpiar error al cancelar
+                            setSelectedPaymentMethod(""); // Reset payment method
+                            setTransferCode(""); // Reset transfer code
+                          }}
+                          disabled={carrito.length === 0 || sendSale}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -560,7 +609,7 @@ export default function POSSystem() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-4">
+      <main className="flex-1 p-4">
         <h2 className="mb-4 text-xl font-semibold">Productos</h2>
         {loading ? (
           <div className="flex items-center justify-center min-h-[200px]">
