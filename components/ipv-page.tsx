@@ -108,7 +108,7 @@ export default function IPVPage() {
     try {
       const response = await fetch(`/api/user/${userId}`);
       if (!response.ok) {
-        throw new Error("Error al obtener los datos del usuario");
+        // throw new Error("Error al obtener los datos del usuario");
       }
       const userData = await response.json();
       // console.log("userData", userData);
@@ -122,7 +122,7 @@ export default function IPVPage() {
       // }
     } catch (error) {
       console.error("Error fetching user data:", error);
-      toast.error("Error al cargar los datos del usuario");
+      toast.info("Este usuario no es administrador");
     }
   };
 
@@ -162,6 +162,7 @@ export default function IPVPage() {
   //     </div>
   //   );
   // }
+  
 
   const totalVentas =
     data?.products.reduce((sum, product) => sum + product.T, 0) || 0;
