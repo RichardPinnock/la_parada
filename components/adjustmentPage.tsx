@@ -91,7 +91,15 @@ export default function AdjustmentsPage() {
       const response = await fetch(
         `/api/adjustment?page=${page}&limit=5&search=${encodeURIComponent(
           search
-        )}`
+        )}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-access":
+              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+          },
+        }
       );
 
       if (!response.ok) {

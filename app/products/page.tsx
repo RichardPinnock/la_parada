@@ -11,8 +11,6 @@ import { Product } from "@/lib/models/products";
 import { useAllStockLocations } from "@/hooks/useStockLocations";
 import { useSession } from "next-auth/react";
 
-
-
 export const dynamic = "force-dynamic";
 
 function ProductsList() {
@@ -25,19 +23,26 @@ function ProductsList() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   async function fetchProducts() {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`/api/products?page=${page}`);
-        if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
-        setProducts(data.products);
-        setTotalPages(data.totalPages);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/products?page=${page}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch products");
+      const data = await res.json();
+      setProducts(data.products);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
     }
+  }
 
   useEffect(() => {
     fetchProducts();
@@ -58,7 +63,9 @@ function ProductsList() {
             <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full container mx-auto">
               {products.map((product) => (
                 <li key={product.id}>
-                  <ProductCard product={product} mode="management" 
+                  <ProductCard
+                    product={product}
+                    mode="management"
                     stockLocations={stockLocations || []}
                     session={session}
                     refresh={fetchProducts} // Callback para refrescar datos

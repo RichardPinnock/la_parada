@@ -15,7 +15,14 @@ export default function ProductDetailPage() {
   useEffect(() => {
     async function fetchProduct() {
       setLoading(true);
-      const res = await fetch(`/api/products/${id}`);
+      const res = await fetch(`/api/products/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
       if (res.ok) {
         setProduct(await res.json());
       } else {
@@ -70,7 +77,9 @@ export default function ProductDetailPage() {
               <p>
                 <span className="font-semibold">Stock por locales:</span>
                 {product.warehouseStocks.length === 0 ? (
-                  <span className="text-gray-400 ml-2 font-semibold">No hay este producto en ningún local.</span>
+                  <span className="text-gray-400 ml-2 font-semibold">
+                    No hay este producto en ningún local.
+                  </span>
                 ) : (
                   <>
                     {product.warehouseStocks.map((stock) => (

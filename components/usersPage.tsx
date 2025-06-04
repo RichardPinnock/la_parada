@@ -46,15 +46,14 @@ interface User {
 
 // Mock data para roles y stock locations
 const roleOptions = [
-    { value: "dependiente", label: "Dependiente" },
-    { value: "admin", label: "Admin" },
+  { value: "dependiente", label: "Dependiente" },
+  { value: "admin", label: "Admin" },
 ];
-
 
 export default function UsersPage() {
   // Estados para listado, búsqueda y paginación infinita
   const [users, setUsers] = useState<User[]>([]);
-  const [stockLocationOptions, setStockLocationOptions] = useState<any[]>([])
+  const [stockLocationOptions, setStockLocationOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -98,7 +97,15 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/user?page=${page}&limit=5&search=${encodeURIComponent(search)}`
+        `/api/user?page=${page}&limit=5&search=${encodeURIComponent(search)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-access":
+              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+          },
+        }
       );
       if (!response.ok) throw new Error("Error al obtener los usuarios");
       const res = await response.json();
@@ -121,18 +128,25 @@ export default function UsersPage() {
   //Funcion para traer los location
   const fetchLocations = async () => {
     try {
-      const response = await fetch(
-        `/api/stockLocation?page=1&limit=100`
-      );
+      const response = await fetch(`/api/stockLocation?page=1&limit=100`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
       if (!response.ok) throw new Error("Error al obtener los locales");
       const res = await response.json();
-      const newStockLocation: any[] = Array.isArray(res) ? res : res.stockLocations || [];
+      const newStockLocation: any[] = Array.isArray(res)
+        ? res
+        : res.stockLocations || [];
       setStockLocationOptions(newStockLocation);
     } catch (error) {
       toast.error("Error al cargar los usuarios");
       console.error(error);
     }
-  }
+  };
 
   // Traer usuarios al cambiar el search o page
   useEffect(() => {
@@ -168,19 +182,19 @@ export default function UsersPage() {
       toast.error("Completa los campos obligatorios");
       return;
     }
-    if(!selectedStockLocationIds.length) {
-        toast.error("Selecciona al menos una ubicación");
-        return;
+    if (!selectedStockLocationIds.length) {
+      toast.error("Selecciona al menos una ubicación");
+      return;
     }
-    if(!role) {
-        toast.error("Selecciona un rol");
-        return;
+    if (!role) {
+      toast.error("Selecciona un rol");
+      return;
     }
-    if(role == "dependiente"){
-        if(selectedStockLocationIds.length > 1){
-            toast.error("Un dependiente solo puede tener una ubicación asignada");
-            return;
-        }
+    if (role == "dependiente") {
+      if (selectedStockLocationIds.length > 1) {
+        toast.error("Un dependiente solo puede tener una ubicación asignada");
+        return;
+      }
     }
     const userData = {
       name,
@@ -191,17 +205,21 @@ export default function UsersPage() {
       stockLocationIds: selectedStockLocationIds,
     };
     try {
-      setSendDataUser(true)
+      setSendDataUser(true);
       const url = selectedUser ? `/api/user/${selectedUser.id}` : "/api/user";
       const method = selectedUser ? "PUT" : "POST";
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
         body: JSON.stringify(userData),
       });
       if (!response.ok) {
         const errorData = await response.json();
-        setSendDataUser(false)
+        setSendDataUser(false);
         throw new Error(errorData.error || "Error al guardar el usuario");
       }
       toast.success(
@@ -209,7 +227,7 @@ export default function UsersPage() {
           ? "Usuario actualizado correctamente"
           : "Usuario creado correctamente"
       );
-      setSendDataUser(false)
+      setSendDataUser(false);
       setShowUserModal(false);
       resetUserForm();
       // Reiniciamos el listado y la paginación
@@ -219,7 +237,7 @@ export default function UsersPage() {
       toast.error(
         error instanceof Error ? error.message : "Error al guardar el usuario"
       );
-      setSendDataUser(false)
+      setSendDataUser(false);
     }
   };
 
@@ -236,7 +254,6 @@ export default function UsersPage() {
     );
     setShowUserModal(true);
   };
-
 
   // Mapea las opciones como requiere react-select
   const stockOptions = stockLocationOptions.map((loc) => ({
@@ -458,7 +475,11 @@ export default function UsersPage() {
             <Separator />
             {/* Botones */}
             <div className="flex gap-2 justify-end">
-              <Button onClick={submitUser} className="flex-1 md:flex-none" disabled={sendDataUser}>
+              <Button
+                onClick={submitUser}
+                className="flex-1 md:flex-none"
+                disabled={sendDataUser}
+              >
                 {selectedUser ? "Actualizar Usuario" : "Crear Usuario"}
               </Button>
               <Button variant="outline" onClick={() => setShowUserModal(false)}>

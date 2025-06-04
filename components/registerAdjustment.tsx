@@ -41,7 +41,9 @@ export function AdjustmentModal({
   // Determinar la ubicación seleccionada:
   useEffect(() => {
     if (product.warehouseStocks) {
-      const availableStocks = product.warehouseStocks.filter(stock => stock.quantity > 0);
+      const availableStocks = product.warehouseStocks.filter(
+        (stock) => stock.quantity > 0
+      );
       if (availableStocks.length === 1) {
         setSelectedLocationId(availableStocks[0].locationId);
       } else if (product.warehouseStocks.length === 1) {
@@ -60,7 +62,11 @@ export function AdjustmentModal({
       return;
     }
     // Si hay más de una ubicación disponible, se requiere seleccionar una
-    if (product.warehouseStocks && product.warehouseStocks.length > 1 && !selectedLocationId) {
+    if (
+      product.warehouseStocks &&
+      product.warehouseStocks.length > 1 &&
+      !selectedLocationId
+    ) {
       toast.error("Por favor selecciona una ubicación");
       return;
     }
@@ -69,7 +75,11 @@ export function AdjustmentModal({
     try {
       const response = await fetch("/api/adjustment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
         body: JSON.stringify({
           userId: session?.user?.id,
           // Si existe más de un warehouseStocks, se usa la selección, de lo contrario se toma la única disponible
@@ -135,7 +145,8 @@ export function AdjustmentModal({
         <div className="space-y-4">
           {/* Select para Ubicación solo si hay más de una opción en warehouseStocks */}
           {product.warehouseStocks &&
-            product.warehouseStocks.filter(stock => stock.quantity > 0).length > 1 && (
+            product.warehouseStocks.filter((stock) => stock.quantity > 0)
+              .length > 1 && (
               <div className="space-y-2">
                 <Label htmlFor="location">Ubicación</Label>
                 <select
@@ -148,8 +159,8 @@ export function AdjustmentModal({
                     Selecciona una ubicación
                   </option>
                   {product.warehouseStocks
-                    .filter(stock => stock.quantity > 0)
-                    .map(stock => (
+                    .filter((stock) => stock.quantity > 0)
+                    .map((stock) => (
                       <option key={stock.locationId} value={stock.locationId}>
                         {stock.location.name}
                       </option>
@@ -185,10 +196,17 @@ export function AdjustmentModal({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleAdjustment} disabled={loading || !reason || quantity <= 0}>
+          <Button
+            onClick={handleAdjustment}
+            disabled={loading || !reason || quantity <= 0}
+          >
             {loading ? "Registrando..." : "Registrar Ajuste"}
           </Button>
         </DialogFooter>
