@@ -79,6 +79,8 @@ export function TransferStockModal({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
         },
         body: JSON.stringify({
           productId: product.id,

@@ -135,7 +135,15 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/user?page=${page}&limit=5&search=${encodeURIComponent(search)}`
+        `/api/user?page=${page}&limit=5&search=${encodeURIComponent(search)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-access":
+              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+          },
+        }
       );
       if (!response.ok) throw new Error("Error al obtener los usuarios");
       const res = await response.json();
@@ -158,7 +166,14 @@ export default function UsersPage() {
   //Funcion para traer los location
   const fetchLocations = async () => {
     try {
-      const response = await fetch(`/api/stockLocation?page=1&limit=100`);
+      const response = await fetch(`/api/stockLocation?page=1&limit=100`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
       if (!response.ok) throw new Error("Error al obtener los locales");
       const res = await response.json();
       const newStockLocation: any[] = Array.isArray(res)
@@ -176,7 +191,11 @@ export default function UsersPage() {
     try {
       const response = await fetch(`/api/user/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
         body: JSON.stringify({ isActive: !currentStatus }),
       });
 
@@ -273,7 +292,11 @@ export default function UsersPage() {
       const method = selectedUser ? "PUT" : "POST";
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
         body: JSON.stringify(userData),
       });
       if (!response.ok) {

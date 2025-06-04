@@ -30,14 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Plus,
-  Search,
-  Eye,
-  Trash2,
-  ShoppingCart,
-  Package,
-} from "lucide-react";
+import { Plus, Search, Eye, Trash2, ShoppingCart, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { useAllStockLocations } from "@/hooks/useStockLocations";
@@ -106,10 +99,14 @@ export default function PurchasesPage() {
   // Modal states
   const [showNewPurchaseModal, setShowNewPurchaseModal] = useState(false);
   const [showPurchaseDetailModal, setShowPurchaseDetailModal] = useState(false);
-  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(
+    null
+  );
 
   // New purchase form states
-  const [newPurchaseItems, setNewPurchaseItems] = useState<NewPurchaseItem[]>([]);
+  const [newPurchaseItems, setNewPurchaseItems] = useState<NewPurchaseItem[]>(
+    []
+  );
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -127,7 +124,15 @@ export default function PurchasesPage() {
         "/api/purchase?page=" +
           page +
           "&limit=5&search=" +
-          encodeURIComponent(search)
+          encodeURIComponent(search),
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-access":
+              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+          },
+        }
       );
       if (!response.ok) throw new Error("Error al obtener compras");
 
@@ -157,7 +162,14 @@ export default function PurchasesPage() {
   // Fetch products
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/products?page=1&limit=100");
+      const response = await fetch("/api/products?page=1&limit=100", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
       if (!response.ok) throw new Error("Error al obtener productos");
 
       const data = await response.json();
@@ -299,7 +311,11 @@ export default function PurchasesPage() {
 
       const response = await fetch("/api/purchase", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
         body: JSON.stringify(purchaseData),
       });
 
@@ -569,9 +585,7 @@ export default function PurchasesPage() {
       {/* Tabla de Compras */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Compras Registradas ({purchases.length})
-          </CardTitle>
+          <CardTitle>Compras Registradas ({purchases.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading && page === 1 ? (

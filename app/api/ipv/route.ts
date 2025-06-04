@@ -35,17 +35,17 @@ export const GET = withRole(async (req, token) => {
   const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
   const end = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 
-  console.log("----------------------------------------------------------------------------------");
-  console.log("----------------------------------------------------------------------------------");
-  console.log("----------------------------------------------------------------------------------");
-  console.log("dateParam", dateParam);
-  console.log("date", date);
-  console.log("start", start);
-  console.log("end", end);
-  console.log("locationId", locationId);
-  console.log("----------------------------------------------------------------------------------");
-  console.log("----------------------------------------------------------------------------------");
-  console.log("----------------------------------------------------------------------------------");
+  // console.log("----------------------------------------------------------------------------------");
+  // console.log("----------------------------------------------------------------------------------");
+  // console.log("----------------------------------------------------------------------------------");
+  // console.log("dateParam", dateParam);
+  // console.log("date", date);
+  // console.log("start", start);
+  // console.log("end", end);
+  // console.log("locationId", locationId);
+  // console.log("----------------------------------------------------------------------------------");
+  // console.log("----------------------------------------------------------------------------------");
+  // console.log("----------------------------------------------------------------------------------");
 
   if (locationId) {
     const location = await prisma.stockLocation.findUnique({
@@ -104,10 +104,10 @@ export const GET = withRole(async (req, token) => {
     select: { id: true },
   })
   const purchasesOfDayIds = purchasesOfDay.map((purchase) => purchase.id);
-  console.log('purchasesOfDayIds', purchasesOfDayIds);
+  // console.log('purchasesOfDayIds', purchasesOfDayIds);
 
   const saleIds = salesOfDay.map((sale) => sale.id);
-  console.log('saleIds', saleIds);
+  // console.log('saleIds', saleIds);
   
 
   // console.log("shifts get", shifts);
@@ -215,7 +215,7 @@ export const GET = withRole(async (req, token) => {
     // console.log("id product", product.id);
     // console.log("incomingItems for product", product.id, incomingItems.filter(m => m.productId === product.id));
     // console.log("buyingTransactions for product", product.id, buyingTransactions.filter(c => c.productId === product.id));
-    console.log('\n');
+    // console.log('\n');
     
     // Para cada producto, extraer los unitPrice de las ventas realizadas en el día
     const salePrices = saleItems
@@ -290,9 +290,9 @@ async function calculateProfit(
   });
   // console.log("startDate", startDate);
   // console.log("endDate", endDate);
-  console.log("shiftIds calculate profit", shiftIds);
+  // console.log("shiftIds calculate profit", shiftIds);
 
-  console.log("sales", sales);
+  // console.log("sales", sales);
 
   const profitsByProduct = new Map<number, any>();
 

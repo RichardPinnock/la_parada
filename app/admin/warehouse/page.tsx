@@ -57,7 +57,14 @@ const PageContent = () => {
     async function fetchData() {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/stockLocation?page=${page}`);
+        const res = await fetch(`/api/stockLocation?page=${page}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-access":
+              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+          },
+        });
         if (!res.ok) throw new Error("Failed to fetch stock locations");
         const result = await res.json();
         setData(result.stockLocations);

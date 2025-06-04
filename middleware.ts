@@ -7,6 +7,19 @@ import { Role } from './lib/models/role';
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req });
   const pathname = req.nextUrl.pathname;
+  const isProduction = process.env.NODE_ENV === 'production'
+  const isApiRequest = req.nextUrl.pathname.startsWith('/api/')
+
+  if (isProduction && isApiRequest) {
+    const secretHeader = req.headers.get('x-internal-access')
+    const expectedSecret = process.env.INTERNAL_API_SECRET
+    console.log(`Checking secret header: ${secretHeader} against expected: ${expectedSecret}`);
+    
+
+    if (secretHeader !== expectedSecret) {
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+  }
 
   // Ruta exacta o dinámica simplificada (por ejemplo: /products/123 → /products/[id])
   const matchedRoute =

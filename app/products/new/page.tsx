@@ -34,6 +34,11 @@ export default function NewProduct() {
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-access":
+              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+          },
           body: cloudinaryData,
         }
       );

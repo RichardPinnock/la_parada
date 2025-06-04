@@ -81,7 +81,14 @@ export default function IPVPage() {
         params.append("locationId", locationId);
       }
 
-      const response = await fetch(`/api/ipv?${params.toString()}`);
+      const response = await fetch(`/api/ipv?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
       if (!response.ok) {
         throw new Error("Error al obtener los datos del IPV");
       }
@@ -102,7 +109,14 @@ export default function IPVPage() {
     if (!userId || isDependiente) return;
 
     try {
-      const response = await fetch(`/api/user/${userId}`);
+      const response = await fetch(`/api/user/${userId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
       if (!response.ok) {
         // throw new Error("Error al obtener los datos del usuario");
       }

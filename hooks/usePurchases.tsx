@@ -87,7 +87,14 @@ export function usePurchases(
         ...(includeUser && { includeUser: "true" }),
       });
 
-      const response = await fetch(`/api/purchase?${params}`);
+      const response = await fetch(`/api/purchase?${params}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error al obtener las compras");
@@ -143,7 +150,14 @@ export function useAllPurchases() {
     setError(null);
 
     try {
-      const response = await fetch("/api/purchase");
+      const response = await fetch("/api/purchase", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error al obtener las compras");
@@ -190,6 +204,8 @@ export function useCreatePurchase() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
         },
         body: JSON.stringify(purchaseData),
       });

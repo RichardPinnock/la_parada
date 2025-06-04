@@ -67,7 +67,14 @@ export default function POSSystem() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/products?page=1&limit=100");
+      const res = await fetch("/api/products?page=1&limit=100", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
       if (!res.ok) throw new Error("Error al obtener productos");
       const data = await res.json();
       setProductos(data.products);
@@ -227,6 +234,8 @@ export default function POSSystem() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-internal-access":
+              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
           },
           body: JSON.stringify(saleData),
         });

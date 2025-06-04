@@ -61,21 +61,8 @@ export const PUT = withRole(async (req: NextRequest, token) => {
     }
 
     const body = await req.json();
-    const {
-      name,
-      email,
-      password = null,
-      stockLocationIds,
-      isActive = true,
-      role,
-    }: {
-      name: string;
-      email: string;
-      password: string | null;
-      stockLocationIds: string[];
-      role: string;
-      isActive: boolean;
-    } = body;
+    // Extraemos las propiedades, pueden venir o no en el request
+    const { name, email, password, stockLocationIds, isActive, role } = body;
 
     // Validar existencia del usuario
     const existingUser = await prisma.user.findUnique({
@@ -88,40 +75,51 @@ export const PUT = withRole(async (req: NextRequest, token) => {
         { status: 404 }
       );
     }
-    // Validar existencia de ubicaciones de stock
-    const existingStockLocations = await prisma.stockLocation.findMany({
-      where: {
-        id: {
-          in: stockLocationIds,
+
+    // Validar existencia de ubicaciones de stock si se proporcionaron
+    if ("stockLocationIds" in body && stockLocationIds && stockLocationIds.length > 0) {
+      const existingStockLocations = await prisma.stockLocation.findMany({
+        where: {
+          id: { in: stockLocationIds },
         },
-      },
-    });
-    if (existingStockLocations.length !== stockLocationIds.length) {
-      return NextResponse.json(
-        { error: "Una o más ubicaciones de stock no existen" },
-        { status: 404 }
-      );
+      });
+      if (existingStockLocations.length !== stockLocationIds.length) {
+        return NextResponse.json(
+          { error: "Una o más ubicaciones de stock no existen" },
+          { status: 404 }
+        );
+      }
     }
 
-    // Actualizar usuario
+    // Construimos el objeto de actualización incluyendo solo las propiedades enviadas.
+    const updateData: any = {};
+
+    if ("name" in body && name !== undefined) updateData.name = name;
+    if ("email" in body && email !== undefined) updateData.email = email;
+    
+    if ("role" in body && role !== undefined) updateData.role = role;
+    if ("isActive" in body && isActive !== undefined) updateData.isActive = isActive;
+
+    // Para el password, solo lo incluimos si tiene valor
+    if ("password" in body && password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    // Para stockLocations, solo actualizamos si se envían stockLocationIds
+    if ("stockLocationIds" in body && Array.isArray(stockLocationIds)) {
+      updateData.stockLocations = {
+        deleteMany: {}, // Opcional: eliminar asociaciones anteriores
+        createMany: {
+          data: stockLocationIds.map((stockLocationId: string) => ({
+            stockLocationId,
+          })),
+        },
+      };
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: {
-        name,
-        email,
-        role,
-        isActive,
-        stockLocations: {
-          deleteMany: {},
-          createMany: {
-            data: stockLocationIds.map((stockLocationId: string) => ({
-              stockLocationId: stockLocationId,
-            })),
-          },
-        },
-        // Solo incluimos password si viene con valor
-        ...(password ? { password: await bcrypt.hash(password, 10) } : {}),
-      },
+      data: updateData,
       include: {
         stockLocations: {
           select: {
@@ -139,4 +137,4 @@ export const PUT = withRole(async (req: NextRequest, token) => {
       { status: 500 }
     );
   }
-})
+});
