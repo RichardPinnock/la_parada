@@ -2,9 +2,9 @@ import { Role } from "./models/role";
 
 export const frontendAccess: Record<string, Role[]> = {
   "/ipv": ["admin", "dependiente"],
-  "/products": ["admin", "dependiente",],
-  "/products/[id]": ["admin", "dependiente", ],
-  "/products/new": ["admin", "dependiente"],
+  // "/products": ["admin", "dependiente",],
+  // "/products/[id]": ["admin", "dependiente", ],
+  // "/products/new": ["admin", "dependiente"],
   "/adjustment": ["admin", "dependiente"],
   
   // * Admin ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -14,6 +14,9 @@ export const frontendAccess: Record<string, Role[]> = {
   "/users/new": ["admin"],
   "/admin/user": ["admin"],
   "/admin/warehouse": ["admin"],
+  "/products/new": ["admin",],
+  "/products/[id]": ["admin",],
+  "/products": ["admin",],
   
   // * No protegidas ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   "/": [],
