@@ -10,6 +10,8 @@ import { ProductCard } from "@/components/productCard";
 import { Product } from "@/lib/models/products";
 import { useAllStockLocations } from "@/hooks/useStockLocations";
 import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import ProductImportForm from "@/components/productImport";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +109,13 @@ function ProductsList() {
 export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start p-8">
+      <div className="w-full max-w-7xl flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Gestionar Productos</h1>
+        {/* <Button variant={"default"}>
+          Importar Productos
+        </Button> */}
+        <ProductImportForm/>
+      </div>
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-screen">
@@ -120,3 +129,4 @@ export default function ProductsPage() {
     </div>
   );
 }
+
