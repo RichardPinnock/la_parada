@@ -216,5 +216,7 @@ Richard !!!!!!!!!!!!!!!!!!
 arregla el front de usuarios (q no se me acomodan los iconos)
 los numero con los inputs
 
+Registrar venta de días anteriores por si no hay internet 
+
 
 -->
