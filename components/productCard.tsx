@@ -1,6 +1,6 @@
 import { Product } from "@/lib/models/products";
 import { StockLocation } from "@prisma/client";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Edit } from "lucide-react"; // Añadido el icono Edit
 import { CldImage } from "next-cloudinary";
 import { useState } from "react";
 import { TransferStockModal } from "./TransferStockModal";
@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Session } from "next-auth";
 import { AdjustmentModal } from "./registerAdjustment";
+import { EditProductModal } from "./EditProductModal";
 
 interface ProductCardProps {
   product: Product;
@@ -28,10 +29,13 @@ export function ProductCard({
 }: ProductCardProps) {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // Nuevo estado para el modal de edición
   const user = session?.user || null;
 
   const cardContent = (
     <Card className="h-full flex flex-col items-center p-4 cursor-pointer hover:shadow-lg transition-shadow">
+      {/* Icono de edición en la parte superior derecha (solo en modo management) */}
+
       <div className="w-full h-48 flex items-center justify-center mb-4 bg-gray-50 rounded-md">
         <div className="relative w-36 h-36 flex items-center justify-center">
           <CldImage
@@ -85,6 +89,25 @@ export function ProductCard({
           </>
         )}
 
+        {mode === "management" && (
+          <div className="flex flex-col gap-2 mt-2 w-full">
+            {/* Botón de editar */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center justify-center gap-1"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowEditModal(true);
+              }}
+            >
+              <Edit className="w-4 h-4" />
+              Editar
+            </Button>
+          </div>
+        )}
+
         {/* Botón de transferencia solo en modo management */}
         {mode === "management" && product.warehouseStocks.length > 0 && (
           <Button
@@ -102,7 +125,8 @@ export function ProductCard({
           </Button>
         )}
 
-        {user && product.warehouseStocks.length > 0 &&
+        {user &&
+          product.warehouseStocks.length > 0 &&
           product.warehouseStocks.reduce(
             (sum, stock) => sum + stock.quantity,
             0
@@ -120,10 +144,9 @@ export function ProductCard({
               Registrar Ajuste
             </Button>
           )}
-
-        {/* <p className="text-gray-600 text-sm">{product.warehouseStocks[0].quantity} en stock</p> */}
       </CardContent>
 
+      {/* Modales */}
       <TransferStockModal
         product={product}
         stockLocations={stockLocations}
@@ -140,17 +163,19 @@ export function ProductCard({
         session={session}
         onComplete={refresh}
       />
+
+      {/* modal de edición */}
+      <EditProductModal
+        product={product}
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        onUpdate={refresh}
+      />
     </Card>
   );
 
   if (mode === "management") {
-    return (
-      <div>
-        {/*    <Link href={`/products/${product.id}`} className="block h-full"></Link>{" "} */}
-
-        {cardContent}
-      </div>
-    );
+    return <div>{cardContent}</div>;
   }
 
   return (
@@ -159,12 +184,12 @@ export function ProductCard({
       tabIndex={0}
       role="button"
       onClick={(e) => {
-        if (!showTransferModal && !showAdjustmentModal) {
+        if (!showTransferModal && !showAdjustmentModal && !showEditModal) {
           onSelect?.(product);
         }
       }}
       onKeyDown={(e) => {
-        if (!showTransferModal && !showAdjustmentModal) {
+        if (!showTransferModal && !showAdjustmentModal && !showEditModal) {
           if (e.key === "Enter" || e.key === " ") onSelect?.(product);
         }
       }}

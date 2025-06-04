@@ -7,16 +7,21 @@ export async function POST(req: NextRequest) {
     const products = await req.json();
     const namesToImport = products.map((p: any) => p.name);
 
-    // Buscamos en la BD los productos cuyos nombres ya existan
+    // Buscamos en la BD los productos cuyos nombres ya existan (case insensitive)
     const existingProducts = await prisma.product.findMany({
       where: {
-        name: { in: namesToImport },
+        name: {
+          in: namesToImport,
+          mode: "insensitive", // Hace que la comparación sea insensible a mayúsculas/minúsculas
+        },
       },
       select: { name: true },
     });
 
     if (existingProducts.length > 0) {
-      const duplicateNames = existingProducts.map((prod) => prod.name).join(", ");
+      const duplicateNames = existingProducts
+        .map((prod) => prod.name)
+        .join(", ");
       return NextResponse.json(
         { error: "Algunos productos ya existen", duplicates: duplicateNames },
         { status: 400 }
