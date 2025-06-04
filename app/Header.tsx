@@ -232,9 +232,8 @@ export default function Header() {
                     );
                   })}
 
-                  <DropdownMenuSeparator />
+                  {/*                  <DropdownMenuSeparator />
 
-                  {/* Opciones de usuario */}
                   <DropdownMenuItem asChild>
                     <Link
                       href="/profile"
@@ -252,7 +251,7 @@ export default function Header() {
                       <Settings className="w-4 h-4" />
                       Configuración
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
 
                   <DropdownMenuSeparator />
 
