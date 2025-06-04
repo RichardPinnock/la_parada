@@ -191,7 +191,11 @@ export default function UsersPage() {
     try {
       const response = await fetch(`/api/user/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
         body: JSON.stringify({ isActive: !currentStatus }),
       });
 
