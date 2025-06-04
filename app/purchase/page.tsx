@@ -1,9 +1,9 @@
-import SalesPage from "@/components/SalesPage";
+import Purchases from "@/components/PurchasesPage";
 
 export default function Page() {
   return (
     <div>
-      <SalesPage />
+      <Purchases />
     </div>
   );
 }
