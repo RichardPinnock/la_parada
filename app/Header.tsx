@@ -348,9 +348,9 @@ export default function Header() {
                             <SheetDescription>{session.user?.email}</SheetDescription>
                           </SheetHeader>
                   
-                          <div className="mt-6 space-y-4">
+                          <div className="mt-2 space-y-4">
                             {/* Panel de administración/usuario para móvil */}
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                               <div className="px-3 py-2">
                                 <h3 className="text-sm font-medium text-muted-foreground">
                                   {session.user?.role === "admin"
@@ -369,7 +369,7 @@ export default function Header() {
                                   >
                                     <Button
                                       variant="ghost"
-                                      className="w-full justify-start gap-3 h-auto py-3 px-3"
+                                      className="w-full justify-start gap-3 h-auto py-1 px-3"
                                     >
                                       <Icon className="h-4 w-4 shrink-0" />
                                       <div className="flex flex-col items-start text-left">
