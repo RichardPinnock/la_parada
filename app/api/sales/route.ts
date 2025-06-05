@@ -236,6 +236,8 @@ export const POST = withRole(async (req, token) =>{
 
 
 export async function CreateShiftToday(userId: string, stockLocationId?: string) {
+    console.log('Creating shift for user:', userId, 'with stockLocationId:', stockLocationId);
+    
     try {
         const user = await prisma.user.findUnique({
             where: { 
@@ -251,6 +253,8 @@ export async function CreateShiftToday(userId: string, stockLocationId?: string)
                 },
             }
         })
+        console.log('user-----------', user);
+        
 
         if (!user) {
             throw new Error("No se encontró el usuario o no está activo para crear un turno");
@@ -343,7 +347,7 @@ async function StartSnapshots(stockLocationId:string) {
             },
         });
         if (!products || products.length === 0) {
-            throw new Error("No se encontraron productos en la ubicación de stock");
+            return []
         }
         const snapshots = products.map(product => ({
             productId: product.id,
