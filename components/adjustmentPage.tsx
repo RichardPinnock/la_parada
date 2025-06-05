@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Search, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/debounce";
+import { LoadingSpinner } from "./ui/loading";
 
 // --- Interfaces ---
 export interface Adjustment {
@@ -290,7 +291,7 @@ export default function AdjustmentsPage() {
       {/* Indicador de carga para páginas adicionales */}
       {loading && page > 1 && (
         <div className="flex justify-center py-4">
-          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2" />
+          <LoadingSpinner />
           <span>Cargando más...</span>
         </div>
       )}

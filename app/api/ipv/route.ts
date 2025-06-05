@@ -32,8 +32,28 @@ export const GET = withRole(async (req, token) => {
 
   const date = dateParam ? new Date(`${dateParam}T05:00:00Z`) : new Date();
   // Usar los valores UTC para construir start y end correctamente
-  const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
-  const end = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
+  const start = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      0,
+      0,
+      0,
+      0
+    )
+  );
+  const end = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      23,
+      59,
+      59,
+      999
+    )
+  );
 
   // console.log("----------------------------------------------------------------------------------");
   // console.log("----------------------------------------------------------------------------------");
@@ -64,32 +84,28 @@ export const GET = withRole(async (req, token) => {
     where: { id: stockLocationId },
   });
 
-  const [firstShiftToday, latestShiftToday, shifts] =
-    await Promise.all([
-      prisma.shift.findFirst({
-        where: { stockLocationId, createdAt: { gte: start, lte: end } },
-        orderBy: { createdAt: "asc" },
-      }),
-      prisma.shift.findFirst({
-        where: {
-          stockLocationId,
-          createdAt: { gte: start, lte: end },
-          endTime: { not: null },
-        },
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.shift.findMany({
-        where: {
-          stockLocationId,
-          startTime: { gte: start, lte: end },
-          OR: [
-            { endTime: null },
-            { endTime: { lte: end } },
-          ],
-        },
-        include: { user: true },
-      })
-    ]);
+  const [firstShiftToday, latestShiftToday, shifts] = await Promise.all([
+    prisma.shift.findFirst({
+      where: { stockLocationId, createdAt: { gte: start, lte: end } },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.shift.findFirst({
+      where: {
+        stockLocationId,
+        createdAt: { gte: start, lte: end },
+        endTime: { not: null },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.shift.findMany({
+      where: {
+        stockLocationId,
+        startTime: { gte: start, lte: end },
+        OR: [{ endTime: null }, { endTime: { lte: end } }],
+      },
+      include: { user: true },
+    }),
+  ]);
   const salesOfDay = await prisma.sale.findMany({
     where: {
       shiftId: { in: shifts.map((s) => s.id) },
@@ -102,13 +118,12 @@ export const GET = withRole(async (req, token) => {
       createdAt: { gte: start, lte: end },
     },
     select: { id: true },
-  })
+  });
   const purchasesOfDayIds = purchasesOfDay.map((purchase) => purchase.id);
   // console.log('purchasesOfDayIds', purchasesOfDayIds);
 
   const saleIds = salesOfDay.map((sale) => sale.id);
   // console.log('saleIds', saleIds);
-  
 
   // console.log("shifts get", shifts);
 
@@ -130,7 +145,7 @@ export const GET = withRole(async (req, token) => {
     prisma.saleItem.findMany({
       where: {
         locationId: stockLocationId,
-        saleId: { in: saleIds }
+        saleId: { in: saleIds },
       },
       include: {
         product: true,
@@ -183,7 +198,7 @@ export const GET = withRole(async (req, token) => {
         // Filtra por las ubicaciones incluidas en el array
         locationId: { in: [stockLocationId] },
         // Filtra por la fecha de la compra relacionada
-        purchaseId: { in: purchasesOfDayIds }
+        purchaseId: { in: purchasesOfDayIds },
       },
       include: {
         product: true,
@@ -197,7 +212,6 @@ export const GET = withRole(async (req, token) => {
 
   // console.log("salesItems", saleItems);
   // console.log('buyingTransactions', buyingTransactions);
-  
 
   const totalCashAmount = saleItems
     .filter((s) => s.sale.paymentMethod.name === "efectivo")
@@ -216,11 +230,15 @@ export const GET = withRole(async (req, token) => {
     // console.log("incomingItems for product", product.id, incomingItems.filter(m => m.productId === product.id));
     // console.log("buyingTransactions for product", product.id, buyingTransactions.filter(c => c.productId === product.id));
     // console.log('\n');
-    
+
     // Para cada producto, extraer los unitPrice de las ventas realizadas en el día
     const salePrices = saleItems
       .filter((s) => s.productId === product.id)
       .map((s) => s.unitPrice);
+
+    const buyingPrices = buyingTransactions
+      .filter((c) => c.productId === product.id)
+      .map((c) => c.unitCost);
 
     // Si hay ventas, usamos el promedio; si no, como fallback se usa el precio fijo del producto
     const PV =
@@ -228,7 +246,12 @@ export const GET = withRole(async (req, token) => {
         ? salePrices.reduce((sum, price) => sum + price, 0) / salePrices.length
         : product.salePrice;
 
-    const PC = product.purchasePrice;
+    const PC =
+      buyingPrices.length > 0
+        ? buyingPrices.reduce((sum, price) => sum + price, 0) /
+          buyingPrices.length
+        : product.purchasePrice;
+    // const PC = product.purchasePrice;
     // const PV = product.salePrice; //! aquí se tomo el precio de venta del producto no de las ventas
     const I = snapshots
       .filter((s) => s.productId === product.id)
@@ -282,7 +305,7 @@ async function calculateProfit(
   const sales = await prisma.sale.findMany({
     where: {
       createdAt: { gte: startDate, lte: endDate },
-      shiftId: { in: shiftIds  },
+      shiftId: { in: shiftIds },
     },
     include: {
       items: { include: { product: true, costAllocations: true } },

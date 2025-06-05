@@ -16,9 +16,18 @@ export const GET = withRole(async (req, token) => {
     // Obtener usuarios con paginación
     const users = await prisma.user.findMany({
       where: {
-        OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { email: { contains: search, mode: "insensitive" } },
+        AND: [
+          {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+            ],
+          },
+          {
+            email: {
+              not: "superAdmin@gmail.com",
+            },
+          },
         ],
       },
       skip,
@@ -28,11 +37,18 @@ export const GET = withRole(async (req, token) => {
           select: {
             stockLocation: true,
           },
-        }, // Incluir ubicaciones de stock
+        },
       },
     });
     // Contar total de usuarios
-    const total = await prisma.user.count();
+    // Contar total de usuarios (excluyendo superAdmin)
+    const total = await prisma.user.count({
+      where: {
+        email: {
+          not: "superAdmin@gmail.com",
+        },
+      },
+    });
 
     return NextResponse.json({
       data: users,
@@ -50,7 +66,7 @@ export const GET = withRole(async (req, token) => {
       { status: 500 }
     );
   }
-})
+});
 
 // POST: /api/user
 export const POST = withRole(async (req, token) => {
@@ -121,4 +137,4 @@ export const POST = withRole(async (req, token) => {
       { status: 500 }
     );
   }
-})
+});

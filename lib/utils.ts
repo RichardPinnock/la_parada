@@ -110,7 +110,8 @@ export function generarIpvPdfComplete(
 export function generateIpvPdfDocument(
   ipvData: IpvRow[],
   authors: string[],
-  fecha?: string
+  fecha?: string,
+  localName: string = "La Parada"
 ) {
   const doc = new jsPDF();
 
@@ -124,7 +125,7 @@ export function generateIpvPdfDocument(
 
   // Título
   doc.setFontSize(16);
-  doc.text("La Parada - IPV " + fechaTextoLargo, 14, 20);
+  doc.text(localName +  " - IPV " + fechaTextoLargo, 14, 20);
   // Autores
   const authorTitle = authors.length > 1 ? "Autores" : "Autor";
   doc.setFontSize(12);

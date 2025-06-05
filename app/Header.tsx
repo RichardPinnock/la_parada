@@ -122,12 +122,12 @@ export default function Header() {
     ];
 
     const dependienteOptions = [
-      {
-        label: "Ver Productos",
-        href: "/products",
-        icon: Package,
-        description: "Explorar catálogo de productos",
-      },
+      // {
+      //   label: "Ver Productos",
+      //   href: "/products",
+      //   icon: Package,
+      //   description: "Explorar catálogo de productos",
+      // },
       {
         label: "IPV",
         href: "/ipv",
@@ -311,85 +311,104 @@ export default function Header() {
                     <SheetDescription>{session.user?.email}</SheetDescription>
                   </SheetHeader>
 
-                  <div className="mt-6 space-y-4">
-                    {/* Panel de administración/usuario para móvil */}
-                    <div className="space-y-2">
-                      <div className="px-3 py-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                          {session.user?.role === "admin"
-                            ? "Panel de Administración"
-                            : "Panel de Usuario"}
-                        </h3>
-                      </div>
-
-                      {menuOptions.map((option) => {
-                        const Icon = option.icon;
-                        return (
-                          <Link
-                            key={option.href}
-                            href={option.href}
-                            onClick={() => setIsOpen(false)}
-                            className="block"
-                          >
-                            <Button
-                              variant="ghost"
-                              className="w-full justify-start gap-3 h-auto py-3 px-3"
-                            >
-                              <Icon className="h-4 w-4 shrink-0" />
-                              <div className="flex flex-col items-start text-left">
-                                <span className="font-medium">
-                                  {option.label}
+                  {/* Mobile Navigation */}
+                  <div className="md:hidden">
+                    {session ? (
+                      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                        <SheetTrigger asChild>
+                          <Button variant="ghost" size="icon" className="md:hidden">
+                            <Menu className="h-5 w-5" />
+                            <span className="sr-only">Abrir menú</span>
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="w-[300px]">
+                          <SheetHeader className="text-left">
+                            <SheetTitle className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage
+                                  src={session.user?.image || ""}
+                                  alt={session.user?.name || "User"}
+                                />
+                                <AvatarFallback>
+                                  {getUserInitials(session.user?.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col items-start">
+                                <span className="font-semibold">
+                                  {session.user?.name || "Usuario"}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {option.description}
-                                </span>
+                                <Badge
+                                  variant={getRoleBadgeVariant(session.user?.role)}
+                                  className="text-xs"
+                                >
+                                  {getRoleLabel(session.user?.role)}
+                                </Badge>
                               </div>
-                            </Button>
-                          </Link>
-                        );
-                      })}
-                    </div>
-
-                    {/* Separador y opciones de usuario */}
-                    {/*   <div className="border-t pt-4 space-y-2">
-                      <div className="px-3 py-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                          Cuenta
-                        </h3>
-                      </div>
-
-                      <Link href="/profile" onClick={() => setIsOpen(false)}>
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start gap-2"
-                        >
-                          <User className="w-4 h-4" />
-                          Perfil
+                            </SheetTitle>
+                            <SheetDescription>{session.user?.email}</SheetDescription>
+                          </SheetHeader>
+                  
+                          <div className="mt-6 space-y-4">
+                            {/* Panel de administración/usuario para móvil */}
+                            <div className="space-y-2">
+                              <div className="px-3 py-2">
+                                <h3 className="text-sm font-medium text-muted-foreground">
+                                  {session.user?.role === "admin"
+                                    ? "Panel de Administración"
+                                    : "Panel de Usuario"}
+                                </h3>
+                              </div>
+                              {menuOptions.map((option) => {
+                                const Icon = option.icon;
+                                return (
+                                  <Link
+                                    key={option.href}
+                                    href={option.href}
+                                    onClick={() => setIsOpen(false)}
+                                    className="block"
+                                  >
+                                    <Button
+                                      variant="ghost"
+                                      className="w-full justify-start gap-3 h-auto py-3 px-3"
+                                    >
+                                      <Icon className="h-4 w-4 shrink-0" />
+                                      <div className="flex flex-col items-start text-left">
+                                        <span className="font-medium">{option.label}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {option.description}
+                                        </span>
+                                      </div>
+                                    </Button>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                  
+                            {/* Opciones de cuenta */}
+                            <div className="border-t pt-4 space-y-2 text-red-500">
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start gap-2"
+                                onClick={() => {
+                                  signOut();
+                                  setIsOpen(false);
+                                }}
+                              >
+                                <LogOut className="w-4 h-4 text-black" />
+                                Cerrar Sesión
+                              </Button>
+                            </div>
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+                    ) : (
+                      <Link href="/login">
+                        <Button size="sm" className="flex items-center gap-2">
+                          <LogIn className="w-4 h-4" />
+                          <span className="hidden sm:inline">Iniciar Sesión</span>
                         </Button>
                       </Link>
-
-                      <Link href="/settings" onClick={() => setIsOpen(false)}>
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start gap-2"
-                        >
-                          <Settings className="w-4 h-4" />
-                          Configuración
-                        </Button>
-                      </Link>
-
-                      <Button
-                        variant="destructive"
-                        className="w-full justify-start gap-2 mt-4"
-                        onClick={() => {
-                          signOut();
-                          setIsOpen(false);
-                        }}
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Cerrar Sesión
-                      </Button>
-                    </div> */}
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>

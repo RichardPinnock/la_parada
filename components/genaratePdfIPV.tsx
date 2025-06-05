@@ -13,6 +13,11 @@ interface PdfData {
     totalCashAmount: number;
     totalTransferAmount: number;
   }
+  stockLocation?: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  };
 }
 
 interface DescargarPdfButtonProps {
@@ -44,8 +49,8 @@ const DescargarPdfButton : React.FC<DescargarPdfButtonProps> = ({ data }) => {
       });
     } else {
       // Si ya tenemos los datos, generamos el PDF directamente
-      const { products, shiftAuthors, date } = data;
-      generateIpvPdfDocument(products, shiftAuthors, date);
+      const { products, shiftAuthors, date, stockLocation } = data;
+      generateIpvPdfDocument(products, shiftAuthors, date, stockLocation?.name || "");
       toast.success("IPV descargado correctamente");
     }
   };

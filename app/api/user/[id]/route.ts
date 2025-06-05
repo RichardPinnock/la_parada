@@ -22,8 +22,13 @@ export const GET = withRole(async (req: NextRequest, token) => {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const user = await prisma.user.findFirst({
+      where: { 
+        id: userId,
+        NOT: {
+          email: 'superAdmin@gmail.com', // Excluir superAdmin
+        }
+      },
       include: {
         stockLocations: {
           select: {
@@ -65,8 +70,13 @@ export const PUT = withRole(async (req: NextRequest, token) => {
     const { name, email, password, stockLocationIds, isActive, role } = body;
 
     // Validar existencia del usuario
-    const existingUser = await prisma.user.findUnique({
-      where: { id },
+    const existingUser = await prisma.user.findFirst({
+      where: { 
+        id,
+        NOT: {
+          email: 'superAdmin@gmail.com', // Excluir superAdmin
+        }
+      },
     });
 
     if (!existingUser) {
