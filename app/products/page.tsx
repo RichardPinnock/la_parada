@@ -2,54 +2,16 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
-import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
-import { CldImage } from "next-cloudinary";
-import Link from "next/link";
+import { useSession } from "next-auth/react";
+
 import { ProductCard } from "@/components/productCard";
 import { Product } from "@/lib/models/products";
 import { useAllStockLocations } from "@/hooks/useStockLocations";
-import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
 import ProductImportForm from "@/components/productImport";
 
 export const dynamic = "force-dynamic";
 
-function ProductsList() {
-  const searchParams = useSearchParams();
-  const page = parseInt(searchParams.get("page") || "1");
-  const { stockLocations, error } = useAllStockLocations();
-  const { data: session } = useSession();
-
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  async function fetchProducts() {
-    setIsLoading(true);
-    try {
-      const res = await fetch(`/api/products?page=${page}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "x-internal-access":
-            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
-        },
-      });
-      if (!res.ok) throw new Error("Failed to fetch products");
-      const data = await res.json();
-      setProducts(data.products);
-      setTotalPages(data.totalPages);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchProducts();
-  }, [page]);
-
+function ProductsList({ products, isLoading, page, totalPages, fetchProducts, stockLocations, session }) {
   return (
     <>
       {isLoading ? (
@@ -107,14 +69,46 @@ function ProductsList() {
 }
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
+  const page = parseInt(searchParams.get("page") || "1");
+  const { stockLocations, error } = useAllStockLocations();
+  const { data: session } = useSession();
+  
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  async function fetchProducts() {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/products?page=${page}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch products");
+      const data = await res.json();
+      setProducts(data.products);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchProducts();
+  }, [page]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start p-8">
       <div className="w-full max-w-7xl flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Gestionar Productos</h1>
-        {/* <Button variant={"default"}>
-          Importar Productos
-        </Button> */}
-        <ProductImportForm/>
+        <ProductImportForm onImportSuccess={fetchProducts}/>
       </div>
       <Suspense
         fallback={
@@ -124,9 +118,16 @@ export default function ProductsPage() {
           </div>
         }
       >
-        <ProductsList />
+        <ProductsList 
+          products={products}
+          isLoading={isLoading}
+          page={page}
+          totalPages={totalPages}
+          fetchProducts={fetchProducts}
+          stockLocations={stockLocations}
+          session={session}
+        />
       </Suspense>
     </div>
   );
 }
-

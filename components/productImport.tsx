@@ -25,7 +25,11 @@ type Product = {
   sellPrice: number;
 };
 
-export default function ProductImportForm() {
+interface ProductImportFormProps {
+  onImportSuccess: () => void; // Función para refrescar datos en el componente padre
+}
+
+export default function ProductImportForm({ onImportSuccess }: ProductImportFormProps) {
   // Estados para el archivo, los productos y el estado del upload
   const [file, setFile] = useState<File | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,6 +39,7 @@ export default function ProductImportForm() {
     "initial" | "selected" | "preview"
   >("initial");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Manejador para el input file (oculto)
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,20 +95,38 @@ export default function ProductImportForm() {
 
   // Función para enviar la importación
   const handleImport = async () => {
-    const res = await fetch("/api/import/products", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-access": process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
-      },
-      body: JSON.stringify(products),
-    });
+    setIsImporting(true);
+    try {
+      const res = await fetch("/api/import/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access": process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+        body: JSON.stringify(products),
+      });
 
-    if (res.ok) {
-      toast.success("Productos importados exitosamente");
-      discardFile();
-    } else {
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`${data.count || products.length} productos importados exitosamente`);
+        discardFile();
+        onImportSuccess(); // Llamamos a la función del padre para refrescar
+      } else {
+        // Si hay errores como productos duplicados
+        const errorData = await res.json();
+        if (errorData.duplicates) {
+          toast.error(
+            `No se pudieron importar productos duplicados: ${errorData.duplicates}`
+          );
+        } else {
+          toast.error("Error al importar productos");
+        }
+      }
+    } catch (error) {
+      console.error("Error importing products:", error);
       toast.error("Error al importar productos");
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -170,10 +193,12 @@ export default function ProductImportForm() {
             </p>
           </div>
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={discardFile}>
+            <Button variant="outline" onClick={discardFile} disabled={isImporting}>
               Descartar Archivo
             </Button>
-            <Button onClick={handleImport}>Importar</Button>
+            <Button onClick={handleImport} disabled={isImporting}>
+              {isImporting ? "Importando..." : "Importar"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
