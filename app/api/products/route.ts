@@ -8,7 +8,7 @@ import { withRole } from "@/lib/guardRole";
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   // console.log('session ===>>', session);
-  let user = null;
+  let user: any = null;
   if (session?.user?.id) {
     user = await prisma.user.findUnique({
       where: {

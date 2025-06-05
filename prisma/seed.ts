@@ -160,7 +160,7 @@ async function main() {
     update: {},
     create: {
       email: 'superAdmin@gmail.com',
-      name: 'Adrian Aguirre',
+      name: 'Super Admin',
       password: await bcrypt.hash('superAdmin', 10),
       role: 'admin', // Asignar rol de administrador
       isActive: true, // Asegurarse de que el usuario esté activo

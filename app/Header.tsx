@@ -147,17 +147,17 @@ export default function Header() {
 
   const menuOptions = getMenuOptions(session?.user?.role);
 
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Mi Tienda";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex h-16 items-center justify-between">
-          {/* Logo */}
           <Link
             href="/"
             className="flex items-center gap-2 text-xl font-bold text-foreground hover:text-primary transition-colors"
           >
-            <Store className="w-6 h-6" />
-            <span className="hidden sm:inline">La Parada</span>
+            <span className="hidden sm:inline">{storeName}</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -316,7 +316,11 @@ export default function Header() {
                     {session ? (
                       <Sheet open={isOpen} onOpenChange={setIsOpen}>
                         <SheetTrigger asChild>
-                          <Button variant="ghost" size="icon" className="md:hidden">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="md:hidden"
+                          >
                             <Menu className="h-5 w-5" />
                             <span className="sr-only">Abrir menú</span>
                           </Button>
@@ -338,16 +342,20 @@ export default function Header() {
                                   {session.user?.name || "Usuario"}
                                 </span>
                                 <Badge
-                                  variant={getRoleBadgeVariant(session.user?.role)}
+                                  variant={getRoleBadgeVariant(
+                                    session.user?.role
+                                  )}
                                   className="text-xs"
                                 >
                                   {getRoleLabel(session.user?.role)}
                                 </Badge>
                               </div>
                             </SheetTitle>
-                            <SheetDescription>{session.user?.email}</SheetDescription>
+                            <SheetDescription>
+                              {session.user?.email}
+                            </SheetDescription>
                           </SheetHeader>
-                  
+
                           <div className="mt-2 space-y-4">
                             {/* Panel de administración/usuario para móvil */}
                             <div className="space-y-1">
@@ -373,7 +381,9 @@ export default function Header() {
                                     >
                                       <Icon className="h-4 w-4 shrink-0" />
                                       <div className="flex flex-col items-start text-left">
-                                        <span className="font-medium">{option.label}</span>
+                                        <span className="font-medium">
+                                          {option.label}
+                                        </span>
                                         <span className="text-xs text-muted-foreground">
                                           {option.description}
                                         </span>
@@ -383,7 +393,7 @@ export default function Header() {
                                 );
                               })}
                             </div>
-                  
+
                             {/* Opciones de cuenta */}
                             <div className="border-t pt-4 space-y-2 text-red-500">
                               <Button
@@ -405,7 +415,9 @@ export default function Header() {
                       <Link href="/login">
                         <Button size="sm" className="flex items-center gap-2">
                           <LogIn className="w-4 h-4" />
-                          <span className="hidden sm:inline">Iniciar Sesión</span>
+                          <span className="hidden sm:inline">
+                            Iniciar Sesión
+                          </span>
                         </Button>
                       </Link>
                     )}

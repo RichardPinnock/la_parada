@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         name: p.name,
         purchasePrice: p.purchasePrice,
         salePrice: p.sellPrice,
-        imageName: "imagen-default.png", // Default image name
+        imageName: "/fallback.jpg", // Default image name
         stock: 0, // Default stock value
       })),
       skipDuplicates: true,
