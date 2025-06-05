@@ -22,6 +22,13 @@ export default function NewProduct() {
     const formData = new FormData(formRef.current!);
     const file = formData.get("image") as File;
 
+    // Validar que hay un archivo
+    if (!file || file.size === 0) {
+      toast.error("Por favor selecciona una imagen");
+      setLoading(false);
+      return;
+    }
+
     // Subir imagen a Cloudinary
     const cloudinaryData = new FormData();
     cloudinaryData.append("file", file);
@@ -29,22 +36,31 @@ export default function NewProduct() {
 
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     let data;
+
     try {
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-access":
-              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
-          },
+          // ❌ NO incluir Content-Type para FormData
+          // ❌ NO incluir headers personalizados para Cloudinary API
           body: cloudinaryData,
         }
       );
+
+      console.log("🚀 ~ handleSubmit ~ res status:", res.status);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Error ${res.status}: ${errorText}`);
+      }
+
       data = await res.json();
-      if (!res.ok || !data.secure_url) {
-        throw new Error(data.error?.message || "Error subiendo la imagen");
+      console.log("🚀 ~ cloudinary response:", data);
+
+      if (!data.secure_url) {
+        throw new Error("No se recibió URL de la imagen");
       }
     } catch (error) {
       console.error("Error subiendo imagen a Cloudinary:", error);
@@ -57,8 +73,18 @@ export default function NewProduct() {
     formData.delete("image");
     formData.append("imageName", data.secure_url);
 
-    // Llamar a la acción del servidor
-    await createProduct(formData);
+    try {
+      // Llamar a la acción del servidor
+      await createProduct(formData);
+      toast.success("Producto creado exitosamente");
+
+      // Resetear formulario
+      formRef.current?.reset();
+      setIsActive(true);
+    } catch (error) {
+      console.error("Error creando producto:", error);
+      toast.error("Error al crear el producto");
+    }
 
     setLoading(false);
   }
