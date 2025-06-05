@@ -1,10 +1,40 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { Edit } from "lucide-react";
+import {
+  Edit,
+  Plus,
+  Loader2,
+  Building,
+  MapPin,
+  Check,
+  X,
+  MoreHorizontal,
+} from "lucide-react";
 
 import ModalStockLocation from "@/components/modals/modal-stock-location";
 import { StockLocation } from "@/hooks/useStockLocations";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +45,7 @@ const PageContent = () => {
   const [data, setData] = useState<StockLocation[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StockLocation>({
@@ -25,7 +56,7 @@ const PageContent = () => {
     updatedAt: new Date(),
   });
 
-  const handleOpen = (data?: any) => {
+  const handleOpen = (data?: StockLocation) => {
     if (data) {
       setSelectedItem({
         id: data.id,
@@ -45,132 +76,309 @@ const PageContent = () => {
     }
     setShowModal(true);
   };
+
   const handleClose = () => setShowModal(false);
 
-  const handleSubmit = (data: { name: string; isActive: boolean }) => {
-    // Aquí puedes hacer lo que quieras con los datos (ej: enviar a la API)
-    console.log("Datos enviados:", data);
-    setShowModal(false);
+  const handleSubmit = async (formData: {
+    name: string;
+    isActive: boolean;
+  }) => {
+    try {
+      const url = selectedItem.id
+        ? `/api/stockLocation/${selectedItem.id}`
+        : "/api/stockLocation";
+      const method = selectedItem.id ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al guardar el local");
+      }
+
+      toast.success(
+        selectedItem.id
+          ? "Local actualizado correctamente"
+          : "Local creado correctamente"
+      );
+
+      setShowModal(false);
+      fetchData(); // Refrescar datos
+    } catch (error) {
+      toast.error("Error al guardar el local");
+      console.error(error);
+    }
+  };
+
+  const toggleActiveStatus = async (location: StockLocation) => {
+    setIsUpdating(location.id);
+    try {
+      const response = await fetch(`/api/stockLocation/${location.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+        body: JSON.stringify({
+          name: location.name,
+          isActive: !location.isActive,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al actualizar el estado");
+      }
+
+      // Actualizar estado local
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === location.id ? { ...item, isActive: !item.isActive } : item
+        )
+      );
+
+      toast.success(
+        `Local ${!location.isActive ? "activado" : "desactivado"} correctamente`
+      );
+    } catch (error) {
+      toast.error("Error al actualizar el estado del local");
+      console.error(error);
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/stockLocation?page=${page}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch stock locations");
+      const result = await res.json();
+      setData(result.stockLocations);
+      setTotalPages(result.totalPages);
+    } catch (error) {
+      toast.error("Error al cargar los locales");
+      console.error("Error fetching stock locations:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`/api/stockLocation?page=${page}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-access":
-              process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
-          },
-        });
-        if (!res.ok) throw new Error("Failed to fetch stock locations");
-        const result = await res.json();
-        setData(result.stockLocations);
-        setTotalPages(result.totalPages);
-      } catch (error) {
-        console.log("Error fetching stock locations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     fetchData();
   }, [page]);
 
-  const handleCheck =
-    (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
-      const newItems = [...data];
-      newItems[index].isActive = event.target.checked;
-      setData(newItems);
-      console.log(newItems[index].name, newItems[index].isActive);
-    };
-
   return (
-    <>
-      {isLoading ? (
-        <div className="flex items-center justify-center space-x-2 min-h-[200px]">
-          <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">Cargando...</p>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header mejorado */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Gestión de Locales</h1>
+          <p className="text-muted-foreground">
+            Administra las ubicaciones de stock de tu empresa
+          </p>
         </div>
-      ) : (
-        <>
-          <div className="flex justify-between items-center p-8">
-            <h1 className="text-2xl font-bold mb-4">Locales</h1>
-            <button
-              onClick={handleOpen}
-              className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition-colors font-semibold"
-            >
-              Registrar local
-            </button>
-          </div>
-          {showModal && (
-            <ModalStockLocation
-              initialData={selectedItem}
-              onClose={handleClose}
-              onSubmit={handleSubmit}
-            />
-          )}
+        <Button onClick={() => handleOpen()} className="w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" />
+          Nuevo Local
+        </Button>
+      </div>
 
-          {data.length === 0 ? (
-            <div className="min-h-screen flex items-center justify-center">
-              <p className="text-gray-600 text-center font-bold text-3xl">
-                No hay locales de stock disponibles.
-              </p>
-            </div>
-          ) : (
-            <div className="p-8">
-              <div className="mb-2 p-2 bg-gray-50 rounded-md">
-                <div className="max-h-46 overflow-x-auto">
-                  <table className="min-w-full divide-y-2 divide-gray-200">
-                    <thead className="sticky top-0 bg-white ltr:text-left rtl:text-right">
-                      <tr className="*:font-medium *:text-gray-900">
-                        <th className="px-3 py-2 whitespace-nowrap">Nombre</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Estado</th>
-                        <th className="px-3 py-2 whitespace-nowrap">Editar</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {data.map((item, idx) => (
-                        <tr
-                          key={item.name}
-                          className="*:text-gray-900 *:first:font-medium"
-                        >
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {item.name}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap text-center">
-                            <input
-                              type="checkbox"
-                              checked={item.isActive}
-                              onChange={handleCheck(idx)}
-                            />
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap text-center">
-                            <button
-                              onClick={() => handleOpen(item)}
-                              className="px-2 py-1 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+      {/* Card principal */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Locales Registrados</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {data.length} local{data.length !== 1 ? "es" : ""} encontrado
+              {data.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                <span className="text-muted-foreground">
+                  Cargando locales...
+                </span>
               </div>
             </div>
+          ) : data.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="rounded-full bg-muted p-3 mb-4">
+                <Building className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No hay locales</h3>
+              <p className="text-sm text-muted-foreground mb-4 text-center">
+                Comienza creando tu primer local de stock
+              </p>
+              <Button onClick={() => handleOpen()}>
+                <Plus className="mr-2 h-4 w-4" />
+                Crear Local
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[300px]">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Local
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[150px] text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Check className="h-4 w-4" />
+                        Estado
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[100px] text-center">
+                      Acciones
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.map((item) => (
+                    <TableRow key={item.id} className="hover:bg-muted/50">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-full bg-blue-100 p-2">
+                            <Building className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <span className="font-medium">{item.name}</span>
+                            <p className="text-sm text-muted-foreground">
+                              ID: {item.id.slice(0, 8)}...
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          {item.isActive ? (
+                            <div className="flex items-center gap-1">
+                              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                              <Badge
+                                variant="secondary"
+                                className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                              >
+                                Activo
+                              </Badge>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <div className="h-2 w-2 bg-red-500 rounded-full" />
+                              <Badge
+                                variant="secondary"
+                                className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                              >
+                                Inactivo
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              disabled={isUpdating === item.id}
+                            >
+                              {isUpdating === item.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <MoreHorizontal className="h-4 w-4" />
+                              )}
+                              <span className="sr-only">Abrir menú</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-[160px]"
+                          >
+                            <DropdownMenuItem onClick={() => handleOpen(item)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar local
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => toggleActiveStatus(item)}
+                              className={
+                                item.isActive
+                                  ? "text-red-600 focus:text-red-600"
+                                  : "text-green-600 focus:text-green-600"
+                              }
+                            >
+                              {item.isActive ? (
+                                <>
+                                  <X className="mr-2 h-4 w-4" />
+                                  Desactivar
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="mr-2 h-4 w-4" />
+                                  Activar
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
-        </>
+        </CardContent>
+      </Card>
+
+      {/* Modal */}
+      {showModal && (
+        <ModalStockLocation
+          initialData={selectedItem}
+          onClose={handleClose}
+          onSubmit={handleSubmit}
+        />
       )}
-    </>
+    </div>
   );
 };
 
 export default function WarehousePage() {
   return (
-    <Suspense fallback={<div>Cargando...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <LoadingSpinner />
+            <p className="text-xl text-muted-foreground">Cargando almacenes...</p>
+          </div>
+        </div>
+      }
+    >
       <PageContent />
     </Suspense>
   );

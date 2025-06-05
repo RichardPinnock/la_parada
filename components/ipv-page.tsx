@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { LoadingSpinner } from "./ui/loading";
 
 interface IPVProduct {
   nombre: string;
@@ -150,7 +151,7 @@ export default function IPVPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <LoadingSpinner />
           <p className="ml-3 text-gray-600">Cargando datos del IPV...</p>
         </div>
       </div>
@@ -235,7 +236,7 @@ export default function IPVPage() {
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    <LoadingSpinner />
                     Cargando...
                   </>
                 ) : (
