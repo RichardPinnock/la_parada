@@ -1,33 +1,33 @@
 import { Product } from "@/lib/models/products";
+import { cn } from "@/lib/utils";
 import { StockLocation } from "@prisma/client";
 import {
-  ArrowRightLeft,
-  Edit,
-  Package,
-  MapPin,
-  DollarSign,
-  MoreVertical,
   AlertCircle,
+  ArrowRightLeft,
   CheckCircle,
+  DollarSign,
+  Edit,
+  MapPin,
+  MoreVertical,
+  Package,
   Settings,
 } from "lucide-react";
-import { CldImage } from "next-cloudinary";
-import { useState } from "react";
-import { TransferStockModal } from "./TransferStockModal";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { Session } from "next-auth";
-import { AdjustmentModal } from "./registerAdjustment";
+import { CldImage } from "next-cloudinary";
+import Image from "next/image";
+import { useState } from "react";
 import { EditProductModal } from "./EditProductModal";
+import { AdjustmentModal } from "./registerAdjustment";
+import { TransferStockModal } from "./TransferStockModal";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -88,14 +88,27 @@ export function ProductCard({
       >
         <CardContent className="flex-1 flex flex-col pt-3">
           <div className="relative w-full h-40 mb-2 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
-            <CldImage
-              src={product.imageName}
-              width={200}
-              height={200}
-              alt={product.name}
-              className="object-contain w-full h-full p-2 transition-transform duration-200 group-hover:scale-105"
-              loading="lazy"
-            />
+            {product.imageName.startsWith("/") ? (
+              // Imagen local (fallback.jpg)
+              <Image
+                src={product.imageName}
+                width={200}
+                height={200}
+                alt={product.name}
+                className="object-contain w-full h-full p-2 transition-transform duration-200 group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              // Imagen de Cloudinary
+              <CldImage
+                src={product.imageName}
+                width={200}
+                height={200}
+                alt={product.name}
+                className="object-contain w-full h-full p-2 transition-transform duration-200 group-hover:scale-105"
+                loading="lazy"
+              />
+            )}
 
             <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
               <Badge
@@ -126,20 +139,20 @@ export function ProductCard({
             </div>
 
             <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-              {mode === "management" && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 w-8 p-0 "
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                      <span className="sr-only">Abrir menú</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[220px]">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 "
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                    <span className="sr-only">Abrir menú</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[220px]">
+                  {mode === "management" && user?.role === "admin" && (
                     <DropdownMenuItem
                       onClick={(e) =>
                         handleAction(e, () => setShowEditModal(true))
@@ -148,8 +161,10 @@ export function ProductCard({
                       <Edit className="mr-2 h-4 w-4" />
                       Editar producto
                     </DropdownMenuItem>
-                    {hasStock && (
-                      <>
+                  )}
+                  {hasStock && (
+                    <>
+                      {user?.role === "admin" && (
                         <DropdownMenuItem
                           onClick={(e) =>
                             handleAction(e, () => setShowTransferModal(true))
@@ -158,19 +173,19 @@ export function ProductCard({
                           <ArrowRightLeft className="mr-2 h-4 w-4" />
                           Transferir stock
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) =>
-                            handleAction(e, () => setShowAdjustmentModal(true))
-                          }
-                        >
-                          <Settings className="mr-2 h-4 w-4" />
-                          Ajustar inventario
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                      )}
+                      <DropdownMenuItem
+                        onClick={(e) =>
+                          handleAction(e, () => setShowAdjustmentModal(true))
+                        }
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        Ajustar inventario
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {!product.isActive && (
