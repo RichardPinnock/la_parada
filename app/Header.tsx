@@ -157,6 +157,7 @@ export default function Header() {
             href="/"
             className="flex items-center gap-2 text-xl font-bold text-foreground hover:text-primary transition-colors"
           >
+            <Store className="h-6 w-6" />
             <span className="hidden sm:inline">{storeName}</span>
           </Link>
 
