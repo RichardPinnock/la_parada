@@ -5,7 +5,7 @@ import Providers from "./providers";
 import { Toaster } from "sonner";
 
 export const metadata = {
-  title: "La Parada POS System",
+  title: "POS System",
   description: "",
 };
 
