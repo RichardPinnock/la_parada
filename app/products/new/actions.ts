@@ -16,5 +16,5 @@ export async function createProduct(formData: FormData) {
     },
   });
 
-  redirect("/products");
+  // redirect("/products");
 }
