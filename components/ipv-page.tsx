@@ -196,7 +196,7 @@ export default function IPVPage() {
                 />
               </div>
 
-              {userLocation.length > 1 ? (
+              {Array.isArray(userLocation) && userLocation.length > 1 ? (
                 <div className="space-y-2 min-w-[180px]">
                   <Label htmlFor="location" className="text-sm font-medium">
                     Local de consulta
