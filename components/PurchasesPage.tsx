@@ -436,6 +436,12 @@ export default function PurchasesPage() {
                         min="1"
                         value={quantity}
                         onChange={(e) => setQuantity(Number(e.target.value))}
+                        onFocus={(e) => {
+                          if (e.target.value === "1") {
+                            e.target.select();
+                            e.target.focus();
+                          }
+                        }}
                       />
                     </div>
 
@@ -444,10 +450,18 @@ export default function PurchasesPage() {
                       <Input
                         type="number"
                         min="0"
-                        step="0.01"
+                        step="100"
                         value={unitPrice}
-                        onChange={(e) => setUnitPrice(Number(e.target.value))}
-                        placeholder="0.00"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setUnitPrice(value === "" ? 0 : Number(value));
+                        }}
+                        onFocus={(e) => {
+                          if (e.target.value === "0") {
+                            e.target.select();
+                          }
+                        }}
+                        placeholder="100"
                       />
                     </div>
 
@@ -492,6 +506,12 @@ export default function PurchasesPage() {
                                       Number(e.target.value)
                                     )
                                   }
+                                  onFocus={(e) => {
+                                    if (e.target.value === "1") {
+                                      e.target.select();
+                                      e.target.focus();
+                                    }
+                                  }}
                                   className="w-20 h-8"
                                 />
                               </div>
