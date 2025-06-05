@@ -156,12 +156,12 @@ async function main() {
   // ]);
 
   const userAdmin = await prisma.user.upsert({
-    where: { email: 'rodriadriaguirre@gmail.com' },
+    where: { email: 'superAdmin@gmail.com' },
     update: {},
     create: {
-      email: 'rodriadriaguirre@gmail.com',
+      email: 'superAdmin@gmail.com',
       name: 'Adrian Aguirre',
-      password: await bcrypt.hash('Ar.123456', 10),
+      password: await bcrypt.hash('superAdmin', 10),
       role: 'admin', // Asignar rol de administrador
       isActive: true, // Asegurarse de que el usuario esté activo
     },
