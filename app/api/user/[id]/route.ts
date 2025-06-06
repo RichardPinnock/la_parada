@@ -25,9 +25,9 @@ export const GET = withRole(async (req: NextRequest, token) => {
     const user = await prisma.user.findFirst({
       where: { 
         id: userId,
-        NOT: {
-          email: 'superAdmin@gmail.com', // Excluir superAdmin
-        }
+        // NOT: {
+        //   email: 'superAdmin@gmail.com', // Excluir superAdmin
+        // }
       },
       include: {
         stockLocations: {
