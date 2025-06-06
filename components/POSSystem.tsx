@@ -566,7 +566,7 @@ export default function POSSystem() {
                         </div>
                       )}
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mb-6">
                         <Button
                           className="flex-1"
                           onClick={finalizeSale}
