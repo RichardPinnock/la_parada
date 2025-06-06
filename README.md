@@ -197,14 +197,6 @@ Once the server is running, visit `http://localhost:3000` to start using the app
 -Frontend mejorar la vista de los locales (http://localhost:3000/admin/warehouse)
 
 ------------------------------------------------------------------
-! hacer loading al registrar una venta
-! revisar responsive en el carrito a veces no se puede ver bien los productos
-
-arreglar cuando no se encuentran  datos para el ipv el mensaje como se muestra
-
-loading pa los botones 
----finalizar venta 
----descargar pdf
 
 Posibles mejoras 
 -Implementar axios:
@@ -213,8 +205,8 @@ Posibles mejoras
 
 
 Richard !!!!!!!!!!!!!!!!!!
-arregla el front de usuarios (q no se me acomodan los iconos)
 los numero con los inputs
+-registrar nueva compra
 
 Registrar venta de días anteriores por si no hay internet 
 

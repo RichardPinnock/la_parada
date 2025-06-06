@@ -239,7 +239,7 @@ export async function CreateShiftToday(userId: string, stockLocationId?: string)
     console.log('Creating shift for user:', userId, 'with stockLocationId:', stockLocationId);
     
     try {
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
             where: { 
                 id: userId,
                 isActive: true
