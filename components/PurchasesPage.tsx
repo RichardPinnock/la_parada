@@ -187,7 +187,7 @@ export default function PurchasesPage() {
   // Fetch products
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/products?page=1&limit=100", {
+      const response = await fetch("/api/products?page=1&limit=5000", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
