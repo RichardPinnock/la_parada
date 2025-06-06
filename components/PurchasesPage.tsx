@@ -30,11 +30,34 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Search, Eye, Trash2, ShoppingCart, Package } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Eye,
+  Trash2,
+  ShoppingCart,
+  Package,
+  ChevronsUpDown,
+  Check,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { useAllStockLocations } from "@/hooks/useStockLocations";
 import { useDebounce } from "@/hooks/debounce";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface Purchase {
   id: string;
@@ -93,6 +116,8 @@ export default function PurchasesPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
+  const [productComboOpen, setProductComboOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -409,24 +434,71 @@ export default function PurchasesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label>Producto</Label>
-                      <Select
-                        value={selectedProductId}
-                        onValueChange={setSelectedProductId}
+                      <Popover
+                        open={productComboOpen}
+                        onOpenChange={setProductComboOpen}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar producto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem
-                              key={product.id}
-                              value={product.id.toString()}
-                            >
-                              {product.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={productComboOpen}
+                            className="w-full justify-between"
+                          >
+                            {selectedProductId
+                              ? products.find(
+                                  (product) =>
+                                    product.id.toString() === selectedProductId
+                                )?.name
+                              : "Seleccionar prod..."}
+                            <ChevronsUpDown className="opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Buscar prod..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>
+                                No se encontró ningún producto.
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {products.map((product) => (
+                                  <CommandItem
+                                    key={product.id}
+                                    value={product.name}
+                                    onSelect={(currentValue) => {
+                                      const foundProduct = products.find(
+                                        (p) => p.name === currentValue
+                                      );
+                                      setSelectedProductId(
+                                        foundProduct?.id.toString() ===
+                                          selectedProductId
+                                          ? ""
+                                          : foundProduct?.id.toString() || ""
+                                      );
+                                      setProductComboOpen(false);
+                                    }}
+                                  >
+                                    {product.name}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        selectedProductId ===
+                                          product.id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="space-y-2">
