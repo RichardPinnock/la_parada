@@ -7,7 +7,6 @@ import { withRole } from "@/lib/guardRole";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
-  // console.log('session ===>>', session);
   let user: any = null;
   if (session?.user?.id) {
     user = await prisma.user.findUnique({
@@ -31,9 +30,11 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") || "1");
   const productsPerPage = parseInt(url.searchParams.get("limit") || "10");
+  const search = url.searchParams.get("search") || "";
   const offset = (page - 1) * productsPerPage;
 
-  const where =
+  // Construir condiciones de filtro para usuario
+  const locationWhere =
     !session?.user?.id || user?.role == "admin"
       ? {}
       : {
@@ -44,11 +45,27 @@ export async function GET(request: Request) {
           },
         };
 
-  // Obtener productos paginados
+  // Añadir condición de búsqueda
+  const where = search
+    ? {
+        name: {
+          contains: search,
+          mode: "insensitive", // Para que sea insensible a mayúsculas/minúsculas
+        },
+      }
+    : {};
+
+  // Obtener productos paginados con filtro de búsqueda
   const products = await prisma.product.findMany({
+    where: {
+        name: {
+          contains: search,
+          mode: "insensitive", // Para que sea insensible a mayúsculas/minúsculas
+        },
+      },
     include: {
       warehouseStocks: {
-        where,
+        where: locationWhere,
         include: {
           location: true,
         },
@@ -65,7 +82,15 @@ export async function GET(request: Request) {
     return qtyB - qtyA; // descendente
   });
 
-  const totalProducts = await prisma.product.count();
+  // Contar total de productos que coinciden con la búsqueda
+  const totalProducts = await prisma.product.count({
+    where: {
+        name: {
+          contains: search,
+          mode: "insensitive", // Para que sea insensible a mayúsculas/minúsculas
+        },
+      },
+  });
   const totalPages = Math.ceil(totalProducts / productsPerPage);
 
   return NextResponse.json({ products: sorted, totalPages });

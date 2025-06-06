@@ -21,6 +21,7 @@ import { Product } from "@/lib/models/products";
 import { useAllStockLocations } from "@/hooks/useStockLocations";
 import ProductImportForm from "@/components/productImport";
 import Link from "next/link";
+import { useDebounce } from "@/hooks/debounce";
 
 export const dynamic = "force-dynamic";
 
@@ -36,11 +37,15 @@ function ProductsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  // Creamos una versión debounced del search (500ms de retardo)
+  const debouncedSearch = useDebounce(search, 500);
+
+
   async function fetchProducts() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `/api/products?page=${page}&search=${encodeURIComponent(search)}`,
+        `/api/products?page=${page}&search=${encodeURIComponent(debouncedSearch)}`,
         {
           method: "GET",
           headers: {
@@ -63,7 +68,7 @@ function ProductsContent() {
 
   useEffect(() => {
     fetchProducts();
-  }, [page, search]);
+  }, [page, debouncedSearch]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
