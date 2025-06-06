@@ -10,7 +10,7 @@ export const GET = withRole(async (req, token) =>{
   try {
     const session = await getServerSession(authOptions);
     //   console.log("session ===>>", session);
-    let user = null;
+    let user: any = null;
     if (session?.user?.id) {
       user = await prisma.user.findUnique({
         where: {
