@@ -67,7 +67,7 @@ export default function POSSystem() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/products?page=1&limit=100", {
+      const res = await fetch("/api/products?page=1&limit=5000", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
