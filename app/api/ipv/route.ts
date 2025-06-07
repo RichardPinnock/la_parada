@@ -215,11 +215,15 @@ export const GET = withRole(async (req, token) => {
 
   const totalCashAmount = saleItems
     .filter((s) => s.sale.paymentMethod.name === "efectivo")
-    .reduce((acc, s) => acc + s.quantity * s.product.salePrice, 0);
+    .reduce((acc, s) => acc + s.quantity * s.unitPrice, 0);
 
   const totalTransferAmount = saleItems
     .filter((s) => s.sale.paymentMethod.name === "transferencia")
     .reduce((acc, s) => acc + s.quantity * s.product.salePrice, 0);
+
+  console.log("\n");
+  console.log("summary ---->", financialSummary.summary);
+  console.log("\n");
 
   // console.log("length productsInLocation", productsInLocation.length);
   // console.log("locationId", stockLocationId);
@@ -239,6 +243,24 @@ export const GET = withRole(async (req, token) => {
     const buyingPrices = buyingTransactions
       .filter((c) => c.productId === product.id)
       .map((c) => c.unitCost);
+
+    // Condicional para detectar variaciones de precio
+    if (salePrices.length > 0) {
+      // Se obtienen los precios únicos
+      const uniquePrices = [...new Set(salePrices)];
+      if (uniquePrices.length > 1) {
+        console.log('-------------------------------- \n');
+        uniquePrices.forEach((price) => {
+          const quantitySold = saleItems
+        .filter((s) => s.productId === product.id && s.unitPrice === price)
+        .reduce((acc, s) => acc + s.quantity, 0);
+          console.log(
+        `Producto ID ${product.id} - ${product.name} se vendieron ${quantitySold} a precio ${price}`
+          );
+        });
+        console.log('-------------------------------- \n');
+      }
+    }
 
     // Si hay ventas, usamos el promedio; si no, como fallback se usa el precio fijo del producto
     const PV =
@@ -275,7 +297,11 @@ export const GET = withRole(async (req, token) => {
       .filter((s) => Number(s.productId) === Number(product.id))
       .reduce((acc, s) => acc + s.quantity, 0);
     const R = I + E - V - M;
-    const T = V * PV;
+
+    // const T = V * PV;
+    const T = financialSummary.products.find((p) => p.productId === product.id)
+      ?.revenue ?? 0;
+    
     const G =
       financialSummary.products.find((g) => g.productId === product.id)
         ?.profit ?? 0;
@@ -325,12 +351,12 @@ async function calculateProfit(
         profitsByProduct.set(item.productId, {
           productId: item.productId,
           name: item.product.name,
-          quantitySold: 0,
-          revenue: 0,
-          realCost: 0,
-          profit: 0,
-          averagePrice: 0,
-          averageCost: 0,
+          quantitySold: 0, // cantidad vendida
+          revenue: 0, // ingresos totales
+          realCost: 0, // costo real total
+          profit: 0, // ganancia total
+          averagePrice: 0, // precio promedio
+          averageCost: 0, // costo promedio
         });
       }
 
