@@ -221,9 +221,9 @@ export const GET = withRole(async (req, token) => {
     .filter((s) => s.sale.paymentMethod.name === "transferencia")
     .reduce((acc, s) => acc + s.quantity * s.product.salePrice, 0);
 
-  console.log("\n");
-  console.log("summary ---->", financialSummary.summary);
-  console.log("\n");
+  // console.log("\n");
+  // console.log("summary ---->", financialSummary.summary);
+  // console.log("\n");
 
   // console.log("length productsInLocation", productsInLocation.length);
   // console.log("locationId", stockLocationId);
