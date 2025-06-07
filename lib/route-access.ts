@@ -17,6 +17,7 @@ export const frontendAccess: Record<string, Role[]> = {
   "/products/new": ["admin",],
   "/products/[id]": ["admin",],
   "/products": ["admin",],
+  "/day-report": ["admin"],
   
   // * No protegidas ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   "/": [],
