@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { getSalePrice } from "@/lib/utils";
 
 interface ItemCarrito extends Product {
   cantidad: number;
@@ -92,7 +93,8 @@ export default function POSSystem() {
 
   // Calcular total
   const total = carrito.reduce(
-    (sum, item) => sum + item.salePrice * item.cantidad,
+    // (sum, item) => sum + item.salePrice * item.cantidad,
+    (sum, item) => sum + getSalePrice(item) * item.cantidad,
     0
   );
 
@@ -215,7 +217,8 @@ export default function POSSystem() {
       const items = carrito.map((item) => ({
         productId: item.id,
         quantity: item.cantidad,
-        unitPrice: item.salePrice,
+        // unitPrice: item.salePrice,
+        unitPrice: getSalePrice(item),
       }));
 
       const saleData = {
@@ -355,7 +358,8 @@ export default function POSSystem() {
                                 <div>
                                   <p className="font-medium">{item.name}</p>
                                   <p className="text-sm text-muted-foreground">
-                                    ${item.salePrice.toFixed(2)} x{" "}
+                                    {/* ${item.salePrice.toFixed(2)} x{" "} */}
+                                    ${getSalePrice(item).toFixed(2)} x{" "}
                                     {item.cantidad}
                                   </p>
                                 </div>

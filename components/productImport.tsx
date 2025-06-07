@@ -29,7 +29,9 @@ interface ProductImportFormProps {
   onImportSuccess: () => void; // Función para refrescar datos en el componente padre
 }
 
-export default function ProductImportForm({ onImportSuccess }: ProductImportFormProps) {
+export default function ProductImportForm({
+  onImportSuccess,
+}: ProductImportFormProps) {
   // Estados para el archivo, los productos y el estado del upload
   const [file, setFile] = useState<File | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -101,14 +103,17 @@ export default function ProductImportForm({ onImportSuccess }: ProductImportForm
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-internal-access": process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
+          "x-internal-access":
+            process.env.NEXT_PUBLIC_INTERNAL_API_SECRET ?? "",
         },
         body: JSON.stringify(products),
       });
 
       if (res.ok) {
         const data = await res.json();
-        toast.success(`${data.count || products.length} productos importados exitosamente`);
+        toast.success(
+          `${data.count || products.length} productos importados exitosamente`
+        );
         discardFile();
         onImportSuccess(); // Llamamos a la función del padre para refrescar
       } else {
@@ -131,7 +136,7 @@ export default function ProductImportForm({ onImportSuccess }: ProductImportForm
   };
 
   return (
-    <div className="p-4 border rounded space-y-4 max-w-xl">
+    <div className="p-4 space-y-4 max-w-xl">
       {/* Input file oculto */}
       <input
         ref={fileInputRef}
@@ -149,7 +154,7 @@ export default function ProductImportForm({ onImportSuccess }: ProductImportForm
       {uploadStep === "selected" && (
         <div className="flex gap-2">
           <Button onClick={parseFile}>Leer Archivo</Button>
-          <Button variant="outline" onClick={discardFile}>
+          <Button variant="destructive" onClick={discardFile}>
             Descartar Archivo
           </Button>
         </div>
@@ -193,7 +198,11 @@ export default function ProductImportForm({ onImportSuccess }: ProductImportForm
             </p>
           </div>
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={discardFile} disabled={isImporting}>
+            <Button
+              variant="outline"
+              onClick={discardFile}
+              disabled={isImporting}
+            >
               Descartar Archivo
             </Button>
             <Button onClick={handleImport} disabled={isImporting}>

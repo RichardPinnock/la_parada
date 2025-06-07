@@ -4,6 +4,7 @@ import { authOptions } from "@/auth";
 import prisma from "@/lib/prisma";
 import { parse } from "path";
 import { withRole } from "@/lib/guardRole";
+import { Product } from "@/lib/models/products";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -70,6 +71,12 @@ export async function GET(request: Request) {
           location: true,
         },
       },
+      prices: {
+        where: locationWhere,
+        include: {
+          location: true,
+        },
+      },
     },
     skip: offset,
     take: productsPerPage,
@@ -77,10 +84,10 @@ export async function GET(request: Request) {
   });
 
   const sorted = products.sort((a, b) => {
-    const qtyA = a.warehouseStocks[0]?.quantity ?? 0;
-    const qtyB = b.warehouseStocks[0]?.quantity ?? 0;
-    return qtyB - qtyA; // descendente
-  });
+      const qtyA = (a as unknown as Product).warehouseStocks[0]?.quantity ?? 0;
+      const qtyB = (b as unknown as Product).warehouseStocks[0]?.quantity ?? 0;
+      return qtyB - qtyA; // descendente
+    });
 
   // Contar total de productos que coinciden con la búsqueda
   const totalProducts = await prisma.product.count({

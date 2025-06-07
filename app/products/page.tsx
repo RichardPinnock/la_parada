@@ -13,6 +13,7 @@ import {
   Plus,
   Search,
   Loader2,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -40,12 +41,13 @@ function ProductsContent() {
   // Creamos una versión debounced del search (500ms de retardo)
   const debouncedSearch = useDebounce(search, 500);
 
-
   async function fetchProducts() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `/api/products?page=${page}&search=${encodeURIComponent(debouncedSearch)}`,
+        `/api/products?page=${page}&search=${encodeURIComponent(
+          debouncedSearch
+        )}`,
         {
           method: "GET",
           headers: {
@@ -83,7 +85,7 @@ function ProductsContent() {
               Administra tu inventario y productos
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
             <Link href="/products/new">
               <Button className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
@@ -106,6 +108,16 @@ function ProductsContent() {
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10"
                 />
+                {search && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-gray-100"
+                    onClick={() => setSearch("")}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-sm">
