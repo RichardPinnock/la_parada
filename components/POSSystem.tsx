@@ -295,14 +295,24 @@ export default function POSSystem() {
             <h1 className="text-2xl font-bold">Sistema POS</h1> */}
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative w-64">
+            <div className="relative max-w-64">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por nombre..."
-                className="pl-8"
+                className="pl-8 pr-8"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
+              {busqueda && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-gray-100"
+                  onClick={() => setBusqueda("")}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
             </div>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
@@ -566,7 +576,7 @@ export default function POSSystem() {
                         </div>
                       )}
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mb-6">
                         <Button
                           className="flex-1"
                           onClick={finalizeSale}
