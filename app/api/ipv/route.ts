@@ -245,22 +245,22 @@ export const GET = withRole(async (req, token) => {
       .map((c) => c.unitCost);
 
     // Condicional para detectar variaciones de precio
-    if (salePrices.length > 0) {
-      // Se obtienen los precios únicos
-      const uniquePrices = [...new Set(salePrices)];
-      if (uniquePrices.length > 1) {
-        console.log('-------------------------------- \n');
-        uniquePrices.forEach((price) => {
-          const quantitySold = saleItems
-        .filter((s) => s.productId === product.id && s.unitPrice === price)
-        .reduce((acc, s) => acc + s.quantity, 0);
-          console.log(
-        `Producto ID ${product.id} - ${product.name} se vendieron ${quantitySold} a precio ${price}`
-          );
-        });
-        console.log('-------------------------------- \n');
-      }
-    }
+    // if (salePrices.length > 0) {
+    //   // Se obtienen los precios únicos
+    //   const uniquePrices = [...new Set(salePrices)];
+    //   if (uniquePrices.length > 1) {
+    //     console.log('-------------------------------- \n');
+    //     uniquePrices.forEach((price) => {
+    //       const quantitySold = saleItems
+    //     .filter((s) => s.productId === product.id && s.unitPrice === price)
+    //     .reduce((acc, s) => acc + s.quantity, 0);
+    //       console.log(
+    //     `Producto ID ${product.id} - ${product.name} se vendieron ${quantitySold} a precio ${price}`
+    //       );
+    //     });
+    //     console.log('-------------------------------- \n');
+    //   }
+    // }
 
     // Si hay ventas, usamos el promedio; si no, como fallback se usa el precio fijo del producto
     const PV =
