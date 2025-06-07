@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:4000": "next dev --turbopack --port 4000",
-    "build": "prisma generate --no-engine && next build",
+    "build": "npx prisma migrate deploy && prisma generate --no-engine && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "npx prisma generate --no-engine"
