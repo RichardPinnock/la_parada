@@ -24,11 +24,19 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { CldImage } from "next-cloudinary";
 
+// Definición simple del tipo StockLocation
+export interface StockLocation {
+  id: string;
+  name: string;
+}
+
 interface EditProductModalProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: () => void;
+  // Nuevo prop: locales disponibles
+  stockLocations: StockLocation[];
 }
 
 export function EditProductModal({
@@ -36,6 +44,7 @@ export function EditProductModal({
   open,
   onOpenChange,
   onUpdate,
+  stockLocations,
 }: EditProductModalProps) {
   const [name, setName] = useState(product.name);
   const [purchasePrice, setPurchasePrice] = useState(product.purchasePrice);
@@ -49,6 +58,11 @@ export function EditProductModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState(product.imageName);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Estado para los precios por local (array de objetos con locationId y salePrice)
+  const [localPrices, setLocalPrices] = useState<
+    { locationId: string; salePrice: string }[]
+  >([]);
 
   // Reset states cuando cambia el producto o se abre/cierra el modal
   useEffect(() => {
@@ -64,8 +78,20 @@ export function EditProductModal({
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      // Inicializar localPrices recorriendo stockLocations. Si el producto trae priceByLocations, se mapea su precio.
+      const initLocalPrices = stockLocations.map((loc) => {
+        const existing =
+          product.prices?.find(
+            (p: any) => p.locationId === loc.id
+          ) || null;
+        return {
+          locationId: loc.id,
+          salePrice: existing ? existing.salePrice.toString() : "",
+        };
+      });
+      setLocalPrices(initLocalPrices);
     }
-  }, [open, product]);
+  }, [open, product, stockLocations]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -144,6 +170,14 @@ export function EditProductModal({
       }
     }
 
+    // Filtrar los precios por local completos (si se ingresó alguna) y convertirlos a número.
+    const filteredLocalPrices = localPrices
+      .filter((lp) => lp.salePrice !== "")
+      .map((lp) => ({
+        locationId: lp.locationId,
+        salePrice: parseFloat(lp.salePrice),
+      }));
+
     try {
       const response = await fetch(`/api/products/${product.id}`, {
         method: "PUT",
@@ -159,6 +193,10 @@ export function EditProductModal({
           notes,
           isActive,
           imageName: imageUrl,
+          // Solo enviamos priceByLocations si hay algún precio ingresado
+          ...(filteredLocalPrices.length > 0 && {
+            priceByLocations: filteredLocalPrices,
+          }),
         }),
       });
 
@@ -280,6 +318,46 @@ export function EditProductModal({
                           placeholder="0.00"
                           className="mt-1"
                         />
+                      </div>
+                    </div>
+
+                    {/* Sección para precios por local (opcional) */}
+                    <div>
+                      <Label
+                        htmlFor="localPrices"
+                        className="text-base font-medium"
+                      >
+                        Precios por local (Opcional)
+                      </Label>
+                      <div className="mt-1 space-y-2">
+                        {stockLocations.map((loc) => {
+                          const priceObj = localPrices.find(
+                            (lp) => lp.locationId === loc.id
+                          );
+                          return (
+                            <div key={loc.id} className="flex items-center gap-2">
+                              <span className="w-32">{loc.name}</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={priceObj ? priceObj.salePrice : ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setLocalPrices((prev) =>
+                                    prev.map((lp) =>
+                                      lp.locationId === loc.id
+                                        ? { ...lp, salePrice: val }
+                                        : lp
+                                    )
+                                  );
+                                }}
+                                placeholder="Precio por local"
+                                className="w-full"
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 

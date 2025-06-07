@@ -8,6 +8,7 @@ export interface Product {
   notes?: string;
   purchasePrice: number;
   warehouseStocks: WarehouseStocks[];
+  prices?: ProductPriceByLocation[];
 }
 interface WarehouseStocks {
   id:         string;
@@ -20,4 +21,18 @@ interface WarehouseStocks {
 interface Location {
   id:   string;
   name: string;
+}
+
+export interface UpdateProductPriceInput {
+  productId: number
+  locationId: string
+  newPrice: number
+}
+
+export interface ProductPriceByLocation {
+  id: number;
+  productId: number;
+  locationId: string;
+  salePrice: number;
+  location: Location;
 }

@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Product } from "./models/products";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -248,4 +249,13 @@ export function generateIpvPdfDocument(
 
   // Finalmente, guardar el PDF con un nombre informado por fecha
   doc.save(`IPV-${fechaTexto}.pdf`);
+}
+
+export function getSalePrice(product: Product, locationId: string = "0"): number {
+  const price =
+    locationId === "0"
+      ? product.prices?.[0]?.salePrice ?? product.salePrice
+      : product.prices?.find((p) => p.locationId === locationId)?.salePrice ?? product.salePrice;
+
+  return price
 }

@@ -1,5 +1,5 @@
 import { Product } from "@/lib/models/products";
-import { cn } from "@/lib/utils";
+import { cn, getSalePrice } from "@/lib/utils";
 import { StockLocation } from "@prisma/client";
 import {
   AlertCircle,
@@ -207,7 +207,7 @@ export function ProductCard({
               <div className="flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full">
                 <DollarSign className="w-4 h-4 text-blue-600" />
                 <span className="text-xl font-bold text-blue-700">
-                  {product.salePrice.toFixed(2)}
+                  {getSalePrice(product).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -327,6 +327,7 @@ export function ProductCard({
         open={showEditModal}
         onOpenChange={setShowEditModal}
         onUpdate={refresh}
+        stockLocations={stockLocations}
       />
     </>
   );
