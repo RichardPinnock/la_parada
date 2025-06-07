@@ -317,7 +317,7 @@ export const GET = withRole(async (req, token) => {
     shiftManagers: shifts
       .filter((s) => s.user.role === "admin")
       .map((s) => s.user.name),
-    products: result,
+    products: result.sort((a, b) => a.nombre.localeCompare(b.nombre)),
     total: { totalCashAmount, totalTransferAmount },
     stockLocation,
   });
